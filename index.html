@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CoWork">
+  <title>CoWork</title>
+  <style>
+    :root {
+      --bg:  #090909;
+      --s1:  #131313;
+      --s2:  #1b1b1b;
+      --b1:  rgba(255,255,255,0.08);
+      --b2:  rgba(255,255,255,0.13);
+      --t1:  #efefef;
+      --t2:  #888;
+      --t3:  #444;
+
+      --ga:  linear-gradient(135deg,#4A8EF7 0%,#9B7DF7 100%);
+      --a1:  #4A8EF7;
+      --a2:  #9B7DF7;
+      --green:  #3DC87A;
+      --amber:  #F0A928;
+      --red:    #E05555;
+
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      background: var(--bg);
+      min-height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--t1);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: calc(var(--safe-t) + 32px) 20px calc(var(--safe-b) + 48px);
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════
+       HEADER
+    ═══════════════════════════ */
+    .greeting {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .wordmark {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      background: var(--ga);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .tagline {
+      font-size: 15px;
+      color: var(--t2);
+      margin-bottom: 40px;
+      letter-spacing: -0.2px;
+    }
+
+    /* ═══════════════════════════
+       STATS
+    ═══════════════════════════ */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .stat-pill {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 16px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--t3);
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .sv-blue   { color: var(--a1); }
+    .sv-amber  { color: var(--amber); }
+    .sv-violet { color: var(--a2); }
+
+    /* ═══════════════════════════
+       SECTION LABEL
+    ═══════════════════════════ */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      margin-bottom: 10px;
+    }
+
+    /* ═══════════════════════════
+       APP CARDS
+    ═══════════════════════════ */
+    .app-card {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 10px;
+      text-decoration: none;
+      display: block;
+      transition: border-color 0.18s, background 0.18s;
+      cursor: pointer;
+    }
+
+    .app-card:hover {
+      border-color: var(--b2);
+      background: #161616;
+    }
+
+    .app-card:active {
+      background: var(--s2);
+      transform: scale(0.99);
+    }
+
+    .app-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .app-icon {
+      width: 50px; height: 50px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .app-icon svg {
+      width: 22px; height: 22px;
+      stroke: rgba(255,255,255,0.9);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .icon-capture  { background: linear-gradient(145deg,#3A7EF0,#5B8CF8); }
+    .icon-dash     { background: linear-gradient(145deg,#E09020,#F0A928); }
+    .icon-linkedin { background: linear-gradient(145deg,#8A6DE8,#C879F0); }
+
+    .app-meta { flex: 1; min-width: 0; }
+
+    .app-name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: var(--t1);
+      margin-bottom: 3px;
+    }
+
+    .app-desc {
+      font-size: 13px;
+      color: var(--t2);
+      line-height: 1.4;
+    }
+
+    .app-chevron {
+      color: var(--t3);
+      font-size: 20px;
+      font-weight: 300;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    /* Stat tags row inside card */
+    .app-tags {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .app-tag {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--b1);
+      color: var(--t3);
+      background: var(--s2);
+    }
+
+    .app-tag.blue {
+      color: var(--a1);
+      border-color: rgba(74,142,247,.25);
+      background: rgba(74,142,247,.08);
+    }
+
+    .app-tag.amber {
+      color: var(--amber);
+      border-color: rgba(240,169,40,.25);
+      background: rgba(240,169,40,.08);
+    }
+
+    .app-tag.violet {
+      color: var(--a2);
+      border-color: rgba(155,125,247,.25);
+      background: rgba(155,125,247,.08);
+    }
+
+    .app-tag.green {
+      color: var(--green);
+      border-color: rgba(61,200,122,.25);
+      background: rgba(61,200,122,.08);
+    }
+
+    .app-tag.red {
+      color: var(--red);
+      border-color: rgba(224,85,85,.25);
+      background: rgba(224,85,85,.08);
+    }
+
+    /* ═══════════════════════════
+       DIVIDER + FOOTER
+    ═══════════════════════════ */
+    .gdiv {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--b2) 50%, transparent);
+      margin: 32px 0;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--t3);
+      line-height: 1.7;
+    }
+
+    .footer strong {
+      color: var(--t2);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+<div class="greeting" id="greeting"></div>
+<div class="wordmark">CoWork</div>
+<div class="tagline">Personal design OS</div>
+
+<div class="stats-row">
+  <div class="stat-pill">
+    <div class="stat-value sv-blue" id="statCaptures">—</div>
+    <div class="stat-label">captures<br>pending</div>
+  </div>
+  <div class="stat-pill">
+    <div class="stat-value sv-amber" id="statTasks">—</div>
+    <div class="stat-label">tasks<br>active</div>
+  </div>
+  <div class="stat-pill">
+    <div class="stat-value sv-violet" id="statLinkedIn">—</div>
+    <div class="stat-label">posts<br>ready</div>
+  </div>
+</div>
+
+<div class="section-label">Apps</div>
+
+<a class="app-card" href="capture.html">
+  <div class="app-top">
+    <div class="app-icon icon-capture">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </div>
+    <div class="app-meta">
+      <div class="app-name">Capture</div>
+      <div class="app-desc">Ideas, questions, links — on the go</div>
+    </div>
+    <div class="app-chevron">›</div>
+  </div>
+  <div class="app-tags" id="captureTags">
+    <span class="app-tag">Mobile-first</span>
+  </div>
+</a>
+
+<a class="app-card" href="dashboard.html">
+  <div class="app-top">
+    <div class="app-icon icon-dash">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+    <div class="app-meta">
+      <div class="app-name">Dashboard</div>
+      <div class="app-desc">Tasks, blockers, decisions, actions</div>
+    </div>
+    <div class="app-chevron">›</div>
+  </div>
+  <div class="app-tags" id="dashTags">
+    <span class="app-tag">Productivity</span>
+  </div>
+</a>
+
+<a class="app-card" href="linkedin.html">
+  <div class="app-top">
+    <div class="app-icon icon-linkedin">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div class="app-meta">
+      <div class="app-name">LinkedIn</div>
+      <div class="app-desc">Content studio and post backlog</div>
+    </div>
+    <div class="app-chevron">›</div>
+  </div>
+  <div class="app-tags" id="linkedinTags">
+    <span class="app-tag">Content</span>
+  </div>
+</a>
+
+<div class="gdiv"></div>
+
+<div class="footer">
+  <strong>Daniel Taiar</strong> · Senior Product Designer<br>
+  On iPhone: open each app in Safari → Share → Add to Home Screen
+</div>
+
+<script>
+  // Greeting
+  const hr = new Date().getHours();
+  document.getElementById('greeting').textContent =
+    hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+
+  // Live stats from localStorage (all apps share the same origin on GitHub Pages)
+  function loadStats() {
+    // — Capture —
+    try {
+      const caps = JSON.parse(localStorage.getItem('cw_captures_v3') || '[]');
+      const pending = caps.filter(c => !c.synced).length;
+      document.getElementById('statCaptures').textContent = pending;
+      const tags = document.getElementById('captureTags');
+      if (pending > 0) {
+        tags.innerHTML = `<span class="app-tag blue">${pending} pending sync</span>`;
+      } else {
+        tags.innerHTML = `<span class="app-tag green">All synced</span>`;
+      }
+    } catch { document.getElementById('statCaptures').textContent = '0'; }
+
+    // — Dashboard —
+    try {
+      const data  = JSON.parse(localStorage.getItem('cw_data_v3') || '{}');
+      const tasks = data.tasks || [];
+      const active   = tasks.filter(t => t.section === 'active' && !t.done).length;
+      const waiting  = tasks.filter(t => t.section === 'waiting' && !t.done).length;
+      const urgent   = (data.blockers || []).filter(b => b.urgent).length;
+      document.getElementById('statTasks').textContent = active;
+      const tags = document.getElementById('dashTags');
+      let html = `<span class="app-tag amber">${active} active</span>`;
+      if (waiting)  html += `<span class="app-tag">${waiting} waiting</span>`;
+      if (urgent)   html += `<span class="app-tag red">${urgent} urgent</span>`;
+      tags.innerHTML = html;
+    } catch { document.getElementById('statTasks').textContent = '0'; }
+
+    // — LinkedIn —
+    try {
+      const li    = JSON.parse(localStorage.getItem('cw_linkedin_v1') || '{"v":1,"posts":[]}');
+      const posts = li.posts || [];
+      const ready    = posts.filter(p => p.status === 'ready').length;
+      const drafting = posts.filter(p => p.status === 'drafting').length;
+      const ideas    = posts.filter(p => p.status === 'idea').length;
+      document.getElementById('statLinkedIn').textContent = ready;
+      const tags = document.getElementById('linkedinTags');
+      let html = `<span class="app-tag">${posts.length} posts</span>`;
+      if (ready)    html += `<span class="app-tag violet">${ready} ready</span>`;
+      if (drafting) html += `<span class="app-tag amber">${drafting} drafting</span>`;
+      if (ideas)    html += `<span class="app-tag">${ideas} ideas</span>`;
+      tags.innerHTML = html;
+    } catch { document.getElementById('statLinkedIn').textContent = '0'; }
+  }
+
+  loadStats();
+</script>
+</body>
+</html>

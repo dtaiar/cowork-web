@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CoWork">
+  <title>CoWork</title>
+  <style>
+    /* ═══════════════════════════════════════
+       TOKENS
+    ═══════════════════════════════════════ */
+    :root {
+      --bg:    #090909;
+      --s1:    #131313;   /* card */
+      --s2:    #1b1b1b;   /* input / inner */
+      --s3:    #222;      /* hover */
+      --b0:    rgba(255,255,255,0.05);
+      --b1:    rgba(255,255,255,0.08);
+      --b2:    rgba(255,255,255,0.13);
+
+      --t1: #efefef;
+      --t2: #888;
+      --t3: #444;
+
+      /* Accent gradient */
+      --ga: linear-gradient(135deg,#4A8EF7 0%,#9B7DF7 100%);
+      --a1: #4A8EF7;   /* blue  */
+      --a2: #9B7DF7;   /* violet */
+
+      /* Semantic */
+      --green:  #3DC87A; --green-d:  rgba(61,200,122,.13);
+      --amber:  #F0A928; --amber-d:  rgba(240,169,40,.13);
+      --red:    #E05555; --red-d:    rgba(224,85,85,.13);
+      --blue:   #4A8EF7; --blue-d:   rgba(74,142,247,.13);
+      --violet: #9B7DF7; --violet-d: rgba(155,125,247,.13);
+      --teal:   #3CBFB8; --teal-d:   rgba(60,191,184,.13);
+
+      --r:  14px;
+      --rl: 18px;
+      --rs: 10px;
+
+      --safe-t: env(safe-area-inset-top,  0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --nav-h: 62px;
+    }
+
+    /* ═══════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--t1);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    /* ═══════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════ */
+    .safe-top { height: var(--safe-t); background: var(--bg); flex-shrink: 0; }
+
+    header {
+      flex-shrink: 0;
+      padding: 16px 22px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hd-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back-btn {
+      width: 30px; height: 30px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9px;
+      display: inline-flex; align-items: center; justify-content: center;
+      text-decoration: none; color: rgba(255,255,255,0.4);
+      flex-shrink: 0; transition: all 0.15s;
+    }
+    .back-btn:hover { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); }
+    .back-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    .wordmark {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+      background: var(--ga);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hd-right { text-align: right; }
+
+    .hd-date {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t2);
+      letter-spacing: -0.1px;
+    }
+
+    .hd-sub {
+      font-size: 11px;
+      color: var(--t3);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 5px;
+    }
+
+    .pending-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--amber);
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════
+       SCROLL BODY
+    ═══════════════════════════════════════ */
+    .scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 4px 20px calc(var(--nav-h) + var(--safe-b) + 28px);
+    }
+    .scroll-body::-webkit-scrollbar { display: none; }
+
+    .tab-pane {
+      animation: fadeUp 0.22s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════
+       BOTTOM NAV
+    ═══════════════════════════════════════ */
+    .nav-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      z-index: 100;
+      padding: 8px 16px calc(var(--safe-b) + 10px);
+    }
+
+    .nav-bar {
+      background: rgba(16,16,16,0.86);
+      backdrop-filter: blur(28px) saturate(1.6);
+      -webkit-backdrop-filter: blur(28px) saturate(1.6);
+      border: 1px solid var(--b2);
+      border-radius: 22px;
+      display: flex;
+      align-items: stretch;
+      padding: 6px;
+      height: var(--nav-h);
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 16px;
+      padding: 4px 2px;
+      transition: background 0.18s;
+      position: relative;
+    }
+
+    .nav-btn:active { background: var(--s2); }
+
+    .nav-btn .ni {  /* icon wrapper */
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 9px;
+      transition: background 0.18s;
+    }
+
+    .nav-btn svg {
+      width: 20px; height: 20px;
+      stroke: var(--t3);
+      fill: none;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 0.18s;
+    }
+
+    .nav-btn .nl { /* label */
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--t3);
+      letter-spacing: 0.1px;
+      transition: color 0.18s;
+    }
+
+    .nav-btn.active .ni {
+      background: rgba(74,142,247,0.15);
+    }
+    .nav-btn.active svg { stroke: var(--a1); }
+    .nav-btn.active .nl { color: var(--a1); }
+
+    /* nav badge */
+    .n-badge {
+      position: absolute; top: 2px; right: 12px;
+      background: var(--red);
+      color: #fff; font-size: 9px; font-weight: 700;
+      min-width: 15px; height: 15px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px;
+      border: 1.5px solid var(--bg);
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION HEADER
+    ═══════════════════════════════════════ */
+    .sec {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin: 22px 0 10px;
+    }
+    .sec:first-child { margin-top: 6px; }
+
+    .sec-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--t3);
+    }
+
+    .sec-count {
+      font-size: 11px; font-weight: 500;
+      color: var(--t3);
+      background: var(--s2);
+      padding: 2px 9px;
+      border-radius: 10px;
+    }
+
+    /* ═══════════════════════════════════════
+       CARD
+    ═══════════════════════════════════════ */
+    .card {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: var(--r);
+      padding: 14px 15px;
+      margin-bottom: 8px;
+    }
+
+    .card-urgent {
+      border-color: rgba(224,85,85,.28);
+      box-shadow: 0 0 0 1px rgba(224,85,85,.08);
+    }
+
+    .card-priority {
+      border-left: 2px solid var(--amber);
+    }
+
+    /* ═══════════════════════════════════════
+       META ROW & BADGES
+    ═══════════════════════════════════════ */
+    .meta {
+      display: flex; align-items: center;
+      gap: 6px; flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 6px;
+      letter-spacing: 0.1px;
+    }
+
+    .b-ht      { background: var(--blue-d);   color: var(--blue);  }
+    .b-portal  { background: var(--green-d);  color: var(--green); }
+    .b-design  { background: var(--violet-d); color: var(--violet);}
+    .b-other   { background: var(--amber-d);  color: var(--amber); }
+    .b-high    { background: var(--red-d);    color: var(--red);   }
+    .b-medium  { background: var(--amber-d);  color: var(--amber); }
+    .b-low     { background: var(--green-d);  color: var(--green); }
+    .b-blocker { background: var(--red-d);    color: var(--red);   }
+    .b-urgent  { background: var(--red-d);    color: var(--red); font-weight:700; }
+
+    .ts { font-size: 11px; color: var(--t3); margin-left: auto; }
+
+    .body-t { font-size: 14px; line-height: 1.5; color: var(--t1); }
+    .sub-t  { font-size: 12px; line-height: 1.45; color: var(--t2); margin-top: 5px; }
+    .info-row {
+      display: flex; gap: 14px; margin-top: 8px;
+      font-size: 12px; color: var(--t3);
+    }
+
+    /* ═══════════════════════════════════════
+       FILTER BAR
+    ═══════════════════════════════════════ */
+    .filter-bar {
+      display: flex; gap: 6px;
+      overflow-x: auto; margin-bottom: 14px;
+      padding-bottom: 2px; scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .fp {
+      padding: 6px 14px; border-radius: 20px;
+      border: 1px solid var(--b1);
+      background: var(--s1); color: var(--t2);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+      white-space: nowrap; flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .fp.on {
+      border-color: var(--a1);
+      background: var(--blue-d);
+      color: var(--a1);
+    }
+
+    /* ═══════════════════════════════════════
+       FORM — CHIP GROUPS
+    ═══════════════════════════════════════ */
+    .field-label {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      color: var(--t3); margin-bottom: 10px;
+    }
+
+    .chip-group {
+      display: flex; flex-wrap: wrap;
+      gap: 7px; margin-bottom: 18px;
+    }
+
+    .chip {
+      padding: 9px 18px; border-radius: 22px;
+      border: 1px solid var(--b1);
+      background: var(--s2); color: var(--t2);
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+      font-family: inherit; white-space: nowrap;
+    }
+    .chip:active { transform: scale(0.95); }
+    .chip.on {
+      border-color: var(--_c, var(--a1));
+      background: var(--_cd, var(--blue-d));
+      color: var(--_c, var(--a1));
+    }
+
+    /* per-chip accent overrides */
+    .c-ht      { --_c: var(--blue);   --_cd: var(--blue-d);   }
+    .c-portal  { --_c: var(--green);  --_cd: var(--green-d);  }
+    .c-design  { --_c: var(--violet); --_cd: var(--violet-d); }
+    .c-other   { --_c: var(--amber);  --_cd: var(--amber-d);  }
+    .c-idea    { --_c: var(--blue);   --_cd: var(--blue-d);   }
+    .c-question{ --_c: var(--amber);  --_cd: var(--amber-d);  }
+    .c-link    { --_c: var(--violet); --_cd: var(--violet-d); }
+    .c-obs     { --_c: var(--green);  --_cd: var(--green-d);  }
+
+    /* ═══════════════════════════════════════
+       TEXTAREA
+    ═══════════════════════════════════════ */
+    textarea {
+      width: 100%; min-height: 100px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: var(--rs);
+      color: var(--t1); font-family: inherit;
+      font-size: 15px; line-height: 1.55;
+      padding: 14px; resize: none; outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 14px;
+    }
+    textarea:focus { border-color: rgba(74,142,247,.45); }
+    textarea::placeholder { color: var(--t3); }
+
+    /* ═══════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════ */
+    .btn {
+      display: inline-flex; align-items: center;
+      justify-content: center; gap: 7px;
+      padding: 14px 20px; border-radius: var(--rs);
+      border: none; font-family: inherit;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+      letter-spacing: -0.1px;
+    }
+    .btn:active { transform: scale(0.97); opacity: 0.88; }
+    .btn:disabled { opacity: 0.3; pointer-events: none; }
+
+    .btn-primary {
+      background: var(--ga); color: #fff; width: 100%;
+      box-shadow: 0 4px 18px rgba(74,142,247,.22);
+    }
+
+    .btn-secondary {
+      background: var(--s2); color: var(--t1);
+      border: 1px solid var(--b1);
+    }
+
+    .btn-danger  { background: var(--red-d);   color: var(--red);   }
+    .btn-success { background: var(--green-d);  color: var(--green); }
+
+    .btn-row { display: flex; gap: 8px; }
+    .btn-row .btn { flex: 1; }
+    .btn-stack { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ═══════════════════════════════════════
+       TASK ITEM
+    ═══════════════════════════════════════ */
+    .task-item {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: var(--r);
+      padding: 13px 14px; margin-bottom: 7px;
+      display: flex; align-items: flex-start; gap: 12px;
+      transition: border-color 0.15s;
+    }
+    .task-item.t-priority { border-left: 2px solid var(--amber); }
+    .task-item.t-done     { opacity: 0.35; }
+    .task-item.t-done .task-title { text-decoration: line-through; }
+
+    .task-check {
+      width: 22px; height: 22px; min-width: 22px;
+      border: 1.5px solid var(--b2); border-radius: 7px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 1px; transition: all 0.15s;
+      background: var(--s2); flex-shrink: 0;
+    }
+    .task-check:active { transform: scale(0.88); }
+    .task-check.checked { background: var(--green); border-color: var(--green); }
+    .task-check.checked::after {
+      content: '';
+      width: 5px; height: 9px;
+      border: solid #fff; border-width: 0 2px 2px 0;
+      transform: rotate(45deg); margin-bottom: 2px;
+    }
+
+    .task-body { flex: 1; min-width: 0; }
+    .task-title { font-size: 14px; line-height: 1.4; font-weight: 500; color: var(--t1); }
+    .task-note  { font-size: 12px; color: var(--t2); margin-top: 4px; line-height: 1.4; }
+
+    .task-foot {
+      display: flex; align-items: center;
+      gap: 6px; margin-top: 8px;
+    }
+
+    .pri-tag {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.4px;
+      color: var(--amber); background: var(--amber-d);
+      padding: 2px 7px; border-radius: 5px;
+    }
+
+    /* ═══════════════════════════════════════
+       CAPTURE ITEM
+    ═══════════════════════════════════════ */
+    .cap-item {
+      background: var(--s1); border: 1px solid var(--b1);
+      border-radius: var(--r);
+      padding: 13px 14px; margin-bottom: 8px;
+    }
+    .cap-item.synced { opacity: 0.3; }
+
+    .cap-actions { display: flex; gap: 7px; margin-top: 10px; }
+    .cap-actions .btn { padding: 7px 13px; font-size: 12px; border-radius: 8px; flex: 1; }
+
+    /* ═══════════════════════════════════════
+       SUB TABS (Intel)
+    ═══════════════════════════════════════ */
+    .sub-tabs {
+      display: flex; overflow-x: auto; gap: 6px;
+      margin-bottom: 16px; padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .sub-tabs::-webkit-scrollbar { display: none; }
+
+    .sub-tab {
+      padding: 7px 16px; border-radius: 20px;
+      border: 1px solid var(--b1);
+      background: var(--s1); color: var(--t2);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+      white-space: nowrap; flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .sub-tab.on {
+      background: var(--blue-d); border-color: var(--a1); color: var(--a1);
+    }
+
+    /* ═══════════════════════════════════════
+       SYNC / EXPORT BLOCKS
+    ═══════════════════════════════════════ */
+    .sync-block {
+      background: var(--s1); border: 1px solid var(--b1);
+      border-radius: var(--rl); padding: 18px; margin-bottom: 12px;
+    }
+    .sync-block-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .sync-block-sub   { font-size: 13px; color: var(--t2); line-height: 1.5; margin-bottom: 14px; }
+
+    .code-preview {
+      background: var(--s2); border-radius: 8px; padding: 12px;
+      font-size: 11px; font-family: "SF Mono", ui-monospace, monospace;
+      white-space: pre-wrap; word-break: break-word;
+      color: var(--t2); max-height: 160px; overflow-y: auto;
+      line-height: 1.5; margin-bottom: 12px;
+    }
+
+    #importArea {
+      width: 100%; min-height: 90px;
+      background: var(--s2); border: 1px solid var(--b1);
+      border-radius: var(--rs); color: var(--t1);
+      font-family: "SF Mono", ui-monospace, monospace;
+      font-size: 11px; padding: 12px; resize: none;
+      outline: none; line-height: 1.5; margin-bottom: 10px;
+    }
+    #importArea:focus { border-color: rgba(74,142,247,.45); }
+
+    /* ═══════════════════════════════════════
+       MISC
+    ═══════════════════════════════════════ */
+    .hint {
+      font-size: 12px; color: var(--t3); text-align: center;
+      line-height: 1.5; padding: 0 10px; margin-top: 8px;
+    }
+
+    code {
+      background: var(--s2); padding: 2px 6px; border-radius: 4px;
+      font-size: 11px; font-family: "SF Mono", ui-monospace, monospace;
+      color: var(--t2);
+    }
+
+    .empty {
+      text-align: center; padding: 60px 20px 40px; color: var(--t3);
+    }
+    .empty-icon { font-size: 38px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-text { font-size: 14px; line-height: 1.6; }
+
+    /* ═══════════════════════════════════════
+       TOAST
+    ═══════════════════════════════════════ */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 20px);
+      left: 50%; transform: translateX(-50%) translateY(70px);
+      background: rgba(240,240,240,0.94);
+      color: #111; padding: 10px 22px;
+      border-radius: 22px; font-size: 14px; font-weight: 500;
+      z-index: 200;
+      transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ═══════════════════════════════════════
+       GRADIENT DIVIDER
+    ═══════════════════════════════════════ */
+    .gdiv {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--b2) 50%, transparent);
+      margin: 4px 0 18px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="safe-top"></div>
+
+<header>
+  <div class="hd-left">
+    <a class="back-btn" href="index.html">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <div class="wordmark">Capture</div>
+  </div>
+  <div class="hd-right">
+    <div class="hd-date" id="hdDate"></div>
+    <div class="hd-sub" id="hdSub">
+      <span class="pending-dot" id="pendingDot" style="display:none"></span>
+      <span id="hdSubText"></span>
+    </div>
+  </div>
+</header>
+
+<div class="scroll-body" id="scrollBody">
+  <div class="tab-pane" id="tabPane"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <div class="nav-bar">
+
+    <button class="nav-btn active" id="nb-capture" onclick="goto('capture')">
+      <div class="ni">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </div>
+      <span class="nl">Capture</span>
+      <span class="n-badge" id="capBadge" style="display:none"></span>
+    </button>
+
+    <button class="nav-btn" id="nb-tasks" onclick="goto('tasks')">
+      <div class="ni">
+        <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <span class="nl">Tasks</span>
+    </button>
+
+    <button class="nav-btn" id="nb-intel" onclick="goto('intel')">
+      <div class="ni">
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <span class="nl">Intel</span>
+    </button>
+
+    <button class="nav-btn" id="nb-sync" onclick="goto('sync')">
+      <div class="ni">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </div>
+      <span class="nl">Sync</span>
+    </button>
+
+    <button class="nav-btn" id="nb-linkedin" onclick="goto('linkedin')">
+      <div class="ni">
+        <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+      </div>
+      <span class="nl">LinkedIn</span>
+    </button>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   SEED DATA
+═══════════════════════════════════════════════════════════════ */
+const SEED = {
+  v:1, ts:"2026-06-08T00:00:00",
+  tasks:[
+    {id:"tw1",title:"HT Launch Limit order",       section:"waiting",project:"ht",    note:"Waiting on PM or stakeholder before proceeding.",done:false},
+    {id:"tw2",title:"HT Complex Gas Hedge",         section:"waiting",project:"ht",    note:"Separate track from Simple Gas Hedge. Pending info.",done:false},
+    {id:"tw3",title:"Hedging Tool portfolio case study",section:"waiting",project:"ht",note:"",done:false},
+    {id:"ta1",title:"HT Simple Gas Hedge",           section:"active", project:"ht",   note:"Design work in progress.",done:false,priority:true},
+    {id:"ta2",title:"HT Add Mingle Page // Gas work",section:"active", project:"ht",   note:"Add Mingle page for Gas work.",done:false},
+    {id:"ta3",title:"HT Documentation: Limit Order, Settlement Order & Hedging Rationale",section:"active",project:"ht",note:"Mingle page: limit order UX, settlement workflow, hedging rationale.",done:false},
+    {id:"ta4",title:"Add Nomination from EMIS on Energy data",section:"active",project:"portal",note:"",done:false},
+    {id:"ta5",title:"15 Min on C-MACH+",             section:"active", project:"portal",note:"",done:false},
+    {id:"ts1",title:"HT Chat Experience mobile",     section:"someday",project:"ht",   note:"Mobile experience for traders and clients.",done:false},
+    {id:"ts2",title:"HT Widget Positions Q + Months + Mobile",section:"someday",project:"ht",note:"Timeframes + mobile.",done:false},
+    {id:"ts3",title:"HT Create order dialog mobile + Templates",section:"someday",project:"ht",note:"",done:false},
+  ],
+  blockers:[
+    {id:"b001",text:"Digital board budget approval (June–Dec gas extension)",impact:"Limit order gas expansion and Simple Gas Hedge blocked",owner:"PM / leadership",due:"Before June board",domain:"ht"},
+    {id:"b002",text:"Magda legal review — capital quotation checkbox copy",impact:"Cannot finalise capital quotation flow",owner:"Magda",due:"TBC",domain:"ht"},
+    {id:"b003",text:"Portfolio data mismatch (4 transactions discrepant)",impact:"Data integrity risk before June launch",owner:"Puneet",due:"Before June launch",domain:"ht"},
+    {id:"b004",text:"Bartek system handover",impact:"Operations coverage gap",owner:"Bartek + ops",due:"TBC",domain:"ht"},
+    {id:"b005",text:"Complex Gas Hedge — no scope or requirements from PM",impact:"Cannot start design or dev work",owner:"PM",due:"TBC",domain:"ht"},
+    {id:"b006",text:"Legacy simulator no longer functional",impact:"Hedging tool dependency unclear",owner:"TBD",due:"TBC",domain:"ht"},
+    {id:"b007",text:"Translation — frontend bottleneck despite backend readiness",impact:"Full multilingual support delayed",owner:"Dev team",due:"TBC",domain:"ht"},
+    {id:"b008",text:"DNA migration — quotes lost at migration",impact:"Intraday RFQ launch risk",owner:"Juan / Ana",due:"URGENT",domain:"portal",urgent:true},
+    {id:"b009",text:"One Market — type board prices endpoint unavailable",impact:"Switzerland demo at risk (June 9)",owner:"Dev",due:"Before Jun 9",domain:"portal"},
+    {id:"b010",text:"Belgium Links API — workflow manager ID dependency",impact:"Ongoing support burden",owner:"TBD",due:"TBC",domain:"portal"},
+  ],
+  questions:[
+    {id:"q001",text:"What is blocking the Limit order launch?",context:"Digital board budget + Magda legal review + 4 dev improvements in progress.",priority:"high",blocker:true,domain:"ht"},
+    {id:"q002",text:"What is the scope of Complex Gas Hedge?",context:"No requirements from PM yet. Separate track from Simple Gas Hedge (TGE-only).",priority:"high",blocker:true,domain:"ht"},
+    {id:"q003",text:"Blended price display: weighted average or separate transaction prices?",context:"Portfolio managers (NL) want blended; operations prefers separate.",priority:"high",blocker:false,domain:"ht"},
+    {id:"q004",text:"Price validation: block trader or warning when price exceeds limit?",context:"Red highlight + button disabled flagged as unsafe. Needs traders + origin team decision.",priority:"high",blocker:false,domain:"ht"},
+    {id:"q005",text:"Connection status indicator: always show or only when offline?",context:"Always-on may be visual noise; some users find it reassuring (MetaTrader comparison).",priority:"medium",blocker:false,domain:"ht"},
+    {id:"q006",text:"Mobile color scheme for Gas commodity",context:"Branding gray assigned to Gas — challenging for UI. Revolut-style vertical stripe proposed.",priority:"medium",blocker:false,domain:"ht"},
+    {id:"q007",text:"Capital quotation checkbox legal text",context:"Hedging wording approved by Magda. Capital quotation copy still pending.",priority:"medium",blocker:false,domain:"ht"},
+    {id:"q008",text:"Mobile pagination: infinite scroll or paginated?",context:"Current pagination too small on mobile. Infinite scroll proposed for list screens only.",priority:"medium",blocker:false,domain:"ht"},
+    {id:"q009",text:"Native vs custom dropdown for commodity selector on mobile?",context:"Native = accessible; custom = design system match. Trade-off unresolved.",priority:"medium",blocker:false,domain:"ht"},
+    {id:"q010",text:"Hedging tool marketing: who owns the customer-facing email and newsletter?",context:"Approach agreed but ownership not assigned.",priority:"medium",blocker:false,domain:"ht"},
+  ],
+  decisions:[
+    {date:"2026-05-26",decision:"Intraday RFQ is Sprint 10 top priority, targeting June 2026 production",domains:["portal"],approver:"Sprint planning"},
+    {date:"2026-05-26",decision:"One Market controlled release → Switzerland demo week of June 9",domains:["portal"],approver:"Sprint planning"},
+    {date:"2026-05-26",decision:"Hedging tool marketing: email campaigns, newsletter, portal banner, Confluence docs",domains:["ht"],approver:"Fred / Daniel"},
+    {date:"2026-05-26",decision:"Kaitan confirmed as taking over from Anna on hedging tool",domains:["ht"],approver:"Team"},
+    {date:"2026-05-22",decision:"Simple Gas Hedge pilot: TGE-only (Get Buried + Gurka Cement)",domains:["ht"],approver:"Olaf"},
+    {date:"2026-05-22",decision:"4 user-test improvements confirmed for dev before launch",domains:["ht"],approver:"Olaf / Puneet"},
+    {date:"2026-05-21",decision:"Future date functionality built but hidden on limit orders",domains:["ht"],approver:"Bartos"},
+    {date:"2026-05-21",decision:"'Hedge' for EU; 'Tranche' for Poland comms only",domains:["ht"],approver:"Design review"},
+    {date:"2026-05-21",decision:"Legal checkbox required on limit order — hedging copy approved, capital quotation pending",domains:["ht"],approver:"Magda"},
+  ],
+  actions:[
+    {item:"Settlement order demo + feedback gathering",owner:"Daniel / Kaia / Ana",due:"2026-05-27",status:"open"},
+    {item:"Natural gas high-level estimates for digital board",owner:"Team",due:"This week",status:"open"},
+    {item:"Discuss DNA migration strategy with Ana (lost-quotes risk)",owner:"Juan",due:"2026-05-28",status:"open",urgent:true},
+    {item:"Send design questions summary email to Puneet + Bartos",owner:"Daniel",due:"ASAP",status:"open"},
+    {item:"Chase Magda for capital quotation checkbox copy",owner:"Daniel / Bartos",due:"ASAP",status:"open"},
+    {item:"Identify what is blocking Limit order launch",owner:"Daniel / PM",due:"ASAP",status:"open"},
+    {item:"Follow up with PM on Complex Gas Hedge scope",owner:"Daniel",due:"ASAP",status:"open"},
+    {item:"Price validation decision: block vs warn",owner:"Daniel",due:"Before launch",status:"open"},
+    {item:"Raise HT documentation needs with product team",owner:"Fred",due:"This week",status:"open"},
+    {item:"Set up AI tools discussion session for design team",owner:"Fred",due:"Next week",status:"open"},
+    {item:"Submit monthly timesheets",owner:"All",due:"2026-05-30",status:"open"},
+    {item:"Confirm Confluence location for support docs",owner:"Puneet",due:"ASAP",status:"open"},
+  ]
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   STORAGE
+═══════════════════════════════════════════════════════════════ */
+const CK = 'cw_captures_v3';
+const DK = 'cw_data_v3';
+
+const loadCaps  = () => { try { return JSON.parse(localStorage.getItem(CK)) || []; } catch { return []; } };
+const saveCaps  = a  => localStorage.setItem(CK, JSON.stringify(a));
+const saveData  = d  => localStorage.setItem(DK, JSON.stringify(d));
+const loadData  = () => {
+  try {
+    const d = JSON.parse(localStorage.getItem(DK));
+    if (d?.v) return d;
+  } catch {}
+  saveData(SEED);
+  return SEED;
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+let tab       = 'capture';
+let selProj   = 'portal';
+let selType   = 'idea';
+let capFilt   = 'all';
+let taskFilt  = 'all';
+let intelTab  = 'blockers';
+let intelFilt = 'all';
+let importing = false;
+
+const PROJ  = { ht:'Hedging', portal:'Portal', design:'Design', other:'Other' };
+const TYPES = { idea:'💡 Idea', question:'❓ Question', link:'🔗 Link', obs:'👁 Observation' };
+const TICON = { idea:'💡', question:'❓', link:'🔗', obs:'👁' };
+
+const GLOSSARY_DATA = [
+  {term:'HT',           meaning:'Hedging Tool — the main trading/hedging platform.',                     cat:'AXPO Terms'},
+  {term:'DMA',          meaning:'Direct Market Access — trading directly on exchange.',                   cat:'AXPO Terms'},
+  {term:'TGE',          meaning:'Towarowa Giełda Energii — Polish energy exchange. Gas pilot uses TGE.', cat:'AXPO Terms'},
+  {term:'Mingle',       meaning:"AXPO's internal Confluence instance for specs and documentation.",       cat:'AXPO Terms'},
+  {term:'RFQ',          meaning:'Request For Quote — client requests a price from a trader.',             cat:'AXPO Terms'},
+  {term:'EMIS',         meaning:'Energy Management Information System — nominated volumes integration.',  cat:'AXPO Terms'},
+  {term:'CMACH',        meaning:'C-MACH+ — Customer Portal feature for 15-min production data.',         cat:'AXPO Terms'},
+  {term:'Intraday',     meaning:'Same-day energy trading. Intraday RFQ is a key Portal feature.',        cat:'AXPO Terms'},
+  {term:'One Market',   meaning:'Cross-market product; controlled release targeting Switzerland.',        cat:'AXPO Terms'},
+  {term:'DNA',          meaning:'Internal platform; migration caused lost-quotes risk for Intraday RFQ.',cat:'AXPO Terms'},
+  {term:'Tranche',      meaning:'Polish comms word for hedge (use "Hedge" for EU, "Tranche" for Poland).', cat:'AXPO Terms'},
+  {term:'!!!',          meaning:'High priority item.',                                                    cat:'Notation'},
+  {term:'#🧑‍💻Pending',  meaning:'Blocked — waiting on info from PM or stakeholder.',                    cat:'Notation'},
+  {term:'UX',           meaning:'User Experience.',                                                       cat:'Notation'},
+  {term:'PRD',          meaning:'Product Requirements Document.',                                         cat:'Notation'},
+  {term:'DS',           meaning:'Design System.',                                                         cat:'Notation'},
+  {term:'TBC',          meaning:'To be confirmed.',                                                       cat:'Notation'},
+  {term:'/hedging-brief', meaning:'Skill — generates the Hedging Tool context brief.',                   cat:'Process'},
+  {term:'/portal-brief',  meaning:'Skill — generates the Customer Portal context brief.',                cat:'Process'},
+  {term:'/sync-captures', meaning:'Skill — routes phone captures to domain inputs.',                     cat:'Process'},
+  {term:'/export-mobile', meaning:'Skill — exports tasks, blockers, questions to JSON for mobile sync.', cat:'Process'},
+  {term:'compile',      meaning:'Trigger word — runs the KB librarian to ingest Raw/ files and write Wiki articles.', cat:'Process'},
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════════════════════ */
+function goto(t) {
+  tab = t;
+  document.querySelectorAll('.nav-btn').forEach(b =>
+    b.classList.toggle('active', b.id === 'nb-' + t)
+  );
+  render();
+  document.getElementById('scrollBody').scrollTop = 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════════════ */
+function refreshHeader() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('hdDate').textContent =
+    `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+
+  const pending = loadCaps().filter(c => !c.synced).length;
+  const dot = document.getElementById('pendingDot');
+  const sub = document.getElementById('hdSubText');
+  const badge = document.getElementById('capBadge');
+
+  if (pending > 0) {
+    dot.style.display = 'block';
+    sub.textContent = `${pending} capture${pending > 1 ? 's' : ''} pending`;
+    badge.style.display = 'flex';
+    badge.textContent = pending;
+  } else {
+    dot.style.display = 'none';
+    const d = loadData();
+    const ts = d.ts ? new Date(d.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}) : '—';
+    sub.textContent = `Synced ${ts}`;
+    badge.style.display = 'none';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER ROUTER
+═══════════════════════════════════════════════════════════════ */
+function render() {
+  const pane = document.getElementById('tabPane');
+  pane.className = 'tab-pane';
+  void pane.offsetWidth; // reflow to restart animation
+  pane.className = 'tab-pane';
+
+  if (tab === 'capture')  pane.innerHTML = renderCapture();
+  if (tab === 'tasks')    pane.innerHTML = renderTasks();
+  if (tab === 'intel')    pane.innerHTML = renderIntel();
+  if (tab === 'sync')     pane.innerHTML = renderSync();
+  if (tab === 'linkedin') pane.innerHTML = renderLinkedin();
+
+  refreshHeader();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CAPTURE TAB
+═══════════════════════════════════════════════════════════════ */
+function renderCapture() {
+  const caps    = loadCaps();
+  const pending = caps.filter(c => !c.synced && (capFilt === 'all' || c.project === capFilt));
+  const synced  = caps.filter(c =>  c.synced && (capFilt === 'all' || c.project === capFilt));
+
+  const form = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="field-label">Project</div>
+      <div class="chip-group">
+        ${Object.entries(PROJ).map(([k,v]) =>
+          `<button class="chip c-${k} ${selProj===k?'on':''}" onclick="sp('${k}')">${v}</button>`
+        ).join('')}
+      </div>
+      <div class="field-label">Type</div>
+      <div class="chip-group">
+        ${Object.entries(TYPES).map(([k,v]) =>
+          `<button class="chip c-${k} ${selType===k?'on':''}" onclick="st('${k}')">${v}</button>`
+        ).join('')}
+      </div>
+      <div class="field-label">Content</div>
+      <textarea id="ct" placeholder="What's on your mind?"></textarea>
+      <button class="btn btn-primary" onclick="addCap()">Save capture</button>
+    </div>`;
+
+  if (!caps.length) return form;
+
+  const fbar = `<div class="filter-bar">
+    ${['all',...Object.keys(PROJ)].map(f =>
+      `<button class="fp ${capFilt===f?'on':''}" onclick="setCF('${f}')">${f==='all'?'All':PROJ[f]}</button>`
+    ).join('')}
+  </div>`;
+
+  const capCard = c => `
+    <div class="cap-item ${c.synced?'synced':''}">
+      <div class="meta">
+        <span class="badge b-${c.project}">${PROJ[c.project]}</span>
+        <span style="font-size:13px">${TICON[c.type]}</span>
+        <span class="ts">${fmtRel(c.ts)}</span>
+      </div>
+      <div class="body-t">${esc(c.text)}</div>
+      <div class="cap-actions">
+        ${!c.synced
+          ? `<button class="btn btn-secondary" onclick="markSync('${c.id}')">Mark synced</button>`
+          : `<button class="btn btn-secondary" onclick="markUnsync('${c.id}')">Unmark</button>`}
+        <button class="btn btn-danger" onclick="delCap('${c.id}')">Delete</button>
+      </div>
+    </div>`;
+
+  let list = fbar;
+
+  if (pending.length) {
+    list += `<div class="sec">
+      <span class="sec-label">Pending</span>
+      <span class="sec-count">${pending.length}</span>
+    </div>`;
+    list += pending.map(capCard).join('');
+  }
+
+  if (synced.length) {
+    list += `<div class="sec">
+      <span class="sec-label">Synced</span>
+      <button class="btn btn-danger" style="padding:4px 10px;font-size:11px;border-radius:7px" onclick="clearSynced()">Clear all</button>
+    </div>`;
+    list += synced.map(capCard).join('');
+  }
+
+  return form + list;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TASKS TAB
+═══════════════════════════════════════════════════════════════ */
+function renderTasks() {
+  const d = loadData();
+  const all = d.tasks || [];
+  const filt = taskFilt === 'all' ? all : all.filter(t => t.project === taskFilt);
+
+  const fbar = `<div class="filter-bar">
+    ${['all',...Object.keys(PROJ)].map(f =>
+      `<button class="fp ${taskFilt===f?'on':''}" onclick="setTF('${f}')">${f==='all'?'All':PROJ[f]}</button>`
+    ).join('')}
+  </div>`;
+
+  const SECS = [
+    {key:'active',  label:'Active'},
+    {key:'waiting', label:'Waiting on'},
+    {key:'someday', label:'Someday'},
+    {key:'done',    label:'Done'},
+  ];
+
+  const taskRow = t => `
+    <div class="task-item ${t.priority?'t-priority':''} ${t.done?'t-done':''}">
+      <div class="task-check ${t.done?'checked':''}" onclick="toggleTask('${t.id}')"></div>
+      <div class="task-body">
+        <div class="task-title">${esc(t.title)}</div>
+        ${t.note ? `<div class="task-note">${esc(t.note)}</div>` : ''}
+        <div class="task-foot">
+          <span class="badge b-${t.project}">${PROJ[t.project]}</span>
+          ${t.priority ? `<span class="pri-tag">PRIORITY</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+
+  let html = fbar;
+  let any = false;
+
+  SECS.forEach(s => {
+    const items = filt.filter(t => t.section === s.key);
+    if (!items.length) return;
+    any = true;
+    html += `<div class="sec"><span class="sec-label">${s.label}</span><span class="sec-count">${items.length}</span></div>`;
+    html += items.map(taskRow).join('');
+  });
+
+  if (!any) html += `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">No tasks here</div></div>`;
+  return html;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INTEL TAB
+═══════════════════════════════════════════════════════════════ */
+function renderIntel() {
+  const STABS = {blockers:'⚠️ Blockers', questions:'❓ Questions', decisions:'✅ Decisions', actions:'📋 Actions', glossary:'📖 Glossary'};
+
+  const nav = `<div class="sub-tabs">
+    ${Object.entries(STABS).map(([k,v]) =>
+      `<button class="sub-tab ${intelTab===k?'on':''}" onclick="setIT('${k}')">${v}</button>`
+    ).join('')}
+  </div>`;
+
+  const fbar = `<div class="filter-bar">
+    ${['all','ht','portal'].map(f =>
+      `<button class="fp ${intelFilt===f?'on':''}" onclick="setIF('${f}')">${f==='all'?'All':PROJ[f]}</button>`
+    ).join('')}
+  </div>`;
+
+  const d = loadData();
+  let body = nav + (intelTab !== 'glossary' ? fbar : '');
+
+  if (intelTab === 'blockers') {
+    const items = (d.blockers||[]).filter(b => intelFilt==='all' || b.domain===intelFilt);
+    if (!items.length) return body + empty('🎉','No blockers in scope');
+    items.forEach(b => {
+      body += `<div class="card ${b.urgent?'card-urgent':''}">
+        <div class="meta">
+          <span class="badge b-${b.domain}">${PROJ[b.domain]||b.domain}</span>
+          ${b.urgent ? `<span class="badge b-urgent">URGENT</span>` : ''}
+        </div>
+        <div class="body-t">${esc(b.text)}</div>
+        <div class="sub-t">${esc(b.impact)}</div>
+        <div class="info-row"><span>👤 ${esc(b.owner)}</span><span>📅 ${esc(b.due)}</span></div>
+      </div>`;
+    });
+  }
+
+  if (intelTab === 'questions') {
+    const items = (d.questions||[]).filter(q => intelFilt==='all' || q.domain===intelFilt);
+    if (!items.length) return body + empty('🎉','No open questions');
+    items.forEach(q => {
+      body += `<div class="card">
+        <div class="meta">
+          <span class="badge b-${q.domain}">${PROJ[q.domain]||q.domain}</span>
+          <span class="badge b-${q.priority}">${q.priority}</span>
+          ${q.blocker ? `<span class="badge b-blocker">Blocker</span>` : ''}
+        </div>
+        <div class="body-t">${esc(q.text)}</div>
+        ${q.context ? `<div class="sub-t">${esc(q.context)}</div>` : ''}
+      </div>`;
+    });
+  }
+
+  if (intelTab === 'decisions') {
+    const items = (d.decisions||[]).filter(dec => intelFilt==='all' || dec.domains.includes(intelFilt));
+    if (!items.length) return body + empty('📋','No decisions logged');
+    items.forEach(dec => {
+      body += `<div class="card">
+        <div class="meta">
+          ${dec.domains.map(dd => `<span class="badge b-${dd}">${PROJ[dd]||dd}</span>`).join('')}
+          <span class="ts">${fmtDate(dec.date)}</span>
+        </div>
+        <div class="body-t">${esc(dec.decision)}</div>
+        ${dec.approver ? `<div class="sub-t">↳ ${esc(dec.approver)}</div>` : ''}
+      </div>`;
+    });
+  }
+
+  if (intelTab === 'actions') {
+    const items = (d.actions||[]);
+    const open = items.filter(a => a.status !== 'done');
+    const done = items.filter(a => a.status === 'done');
+    if (!items.length) return body + empty('✅','No action items');
+
+    if (open.length) {
+      body += `<div class="sec"><span class="sec-label">Open</span><span class="sec-count">${open.length}</span></div>`;
+      open.forEach(a => {
+        body += `<div class="card ${a.urgent?'card-urgent':''}">
+          <div class="meta">
+            ${a.urgent ? `<span class="badge b-urgent">URGENT</span>` : ''}
+            <span class="ts">${esc(a.due)}</span>
+          </div>
+          <div class="body-t">${esc(a.item)}</div>
+          <div class="sub-t">👤 ${esc(a.owner)}</div>
+        </div>`;
+      });
+    }
+
+    if (done.length) {
+      body += `<div class="sec"><span class="sec-label">Done</span><span class="sec-count">${done.length}</span></div>`;
+      done.forEach(a => {
+        body += `<div class="card" style="opacity:.35">
+          <div class="body-t" style="text-decoration:line-through">${esc(a.item)}</div>
+          <div class="sub-t">👤 ${esc(a.owner)}</div>
+        </div>`;
+      });
+    }
+  }
+
+  if (intelTab === 'glossary') {
+    const q = (document.getElementById('glossaryQ')?.value || '').toLowerCase();
+    const items = GLOSSARY_DATA.filter(g =>
+      !q || g.term.toLowerCase().includes(q) || g.meaning.toLowerCase().includes(q)
+    );
+    body += `
+      <div style="margin-bottom: 14px;">
+        <input id="glossaryQ" type="search"
+          style="width:100%; background:var(--s2); border:1px solid var(--b1); border-radius:var(--rs); color:var(--t1); font-family:inherit; font-size:14px; padding:10px 14px; outline:none;"
+          placeholder="Search terms…" oninput="setIT('glossary')" value="${esc(q)}">
+      </div>`;
+    if (!items.length) {
+      body += empty('🔍', 'No matching terms');
+    } else {
+      const cats = [...new Set(items.map(g => g.cat))];
+      cats.forEach(cat => {
+        body += `<div class="sec" style="margin-top:12px;"><span class="sec-label">${esc(cat)}</span></div>`;
+        items.filter(g => g.cat === cat).forEach(g => {
+          body += `<div class="card" style="padding:11px 13px; margin-bottom:6px;">
+            <div style="display:flex; gap:10px; align-items:baseline;">
+              <code style="font-size:12px; color:var(--amber); background:var(--amber-d); padding:2px 7px; border-radius:5px; white-space:nowrap; flex-shrink:0;">${esc(g.term)}</code>
+              <span style="font-size:13px; color:var(--t2); line-height:1.45;">${esc(g.meaning)}</span>
+            </div>
+          </div>`;
+        });
+      });
+    }
+  }
+
+  return body;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SYNC TAB
+═══════════════════════════════════════════════════════════════ */
+function renderSync() {
+  const pending = loadCaps().filter(c => !c.synced);
+  const d = loadData();
+  const ts = d.ts
+    ? new Date(d.ts).toLocaleString(undefined, {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
+    : 'Never';
+
+  const exportBlock = `
+    <div class="sync-block">
+      <div class="sync-block-title">📤 Export captures</div>
+      <div class="sync-block-sub">
+        ${pending.length
+          ? `${pending.length} capture${pending.length > 1 ? 's' : ''} to export. Paste in Cowork and say <code>/sync-captures</code>.`
+          : `Nothing pending. All captures are synced.`}
+      </div>
+      ${pending.length ? `<div class="code-preview">${esc(buildMd(pending))}</div>` : ''}
+      <div class="btn-stack">
+        <button class="btn btn-primary" ${!pending.length?'disabled':''} onclick="copyCaptures()">Copy to clipboard</button>
+        <button class="btn btn-secondary" ${!pending.length?'disabled':''} onclick="shareCaptures()">Share / Save to Files</button>
+        <button class="btn btn-danger" ${!pending.length?'disabled':''} onclick="markAllSynced()">Mark all as synced</button>
+      </div>
+    </div>`;
+
+  const importBlock = importing ? `
+    <div class="sync-block">
+      <div class="sync-block-title">📥 Paste desktop data</div>
+      <div class="sync-block-sub">Run <code>/export-mobile</code> in Cowork, copy the JSON, then paste below.</div>
+      <textarea id="importArea" placeholder='{"v":1,"ts":"...","tasks":[...],...}'></textarea>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="doImport()">Apply</button>
+        <button class="btn btn-secondary" onclick="cancelImport()">Cancel</button>
+      </div>
+    </div>` : `
+    <div class="sync-block">
+      <div class="sync-block-title">📥 Sync from desktop</div>
+      <div class="sync-block-sub">Last synced: ${ts}<br>Run <code>/export-mobile</code> in Cowork to refresh tasks, blockers, questions and decisions.</div>
+      <button class="btn btn-secondary" onclick="openImport()">Paste desktop data</button>
+    </div>`;
+
+  return exportBlock + importBlock +
+    `<p class="hint">Tasks and intel are read-only.<br>Edit via Cowork on desktop.</p>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CAPTURE ACTIONS
+═══════════════════════════════════════════════════════════════ */
+const sp = p => { selProj = p; render(); };
+const st = t => { selType = t; render(); };
+const setCF = f => { capFilt = f; render(); };
+
+function addCap() {
+  const el = document.getElementById('ct');
+  const text = el?.value?.trim();
+  if (!text) { toast('Write something first'); return; }
+  const caps = loadCaps();
+  caps.unshift({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    project: selProj, type: selType, text,
+    ts: new Date().toISOString(), synced: false
+  });
+  saveCaps(caps);
+  toast('Saved ✓');
+  render();
+}
+
+const markSync   = id => { const c = loadCaps(), i = c.find(x=>x.id===id); if(i){i.synced=true;  saveCaps(c);render();} };
+const markUnsync = id => { const c = loadCaps(), i = c.find(x=>x.id===id); if(i){i.synced=false; saveCaps(c);render();} };
+const delCap     = id => { if(!confirm('Delete?')) return; saveCaps(loadCaps().filter(c=>c.id!==id)); render(); };
+const clearSynced = () => { if(!confirm('Remove all synced captures?')) return; saveCaps(loadCaps().filter(c=>!c.synced)); render(); };
+const markAllSynced = () => { saveCaps(loadCaps().map(c=>({...c,synced:true}))); render(); toast('All synced ✓'); };
+
+/* ═══════════════════════════════════════════════════════════════
+   TASK ACTIONS
+═══════════════════════════════════════════════════════════════ */
+const setTF = f => { taskFilt = f; render(); };
+
+function toggleTask(id) {
+  const d = loadData();
+  const t = (d.tasks||[]).find(t=>t.id===id);
+  if (t) { t.done = !t.done; if(t.done) t.section='done'; saveData(d); render(); toast(t.done?'Done ✓':'Reopened'); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INTEL ACTIONS
+═══════════════════════════════════════════════════════════════ */
+const setIT = t => { intelTab = t; intelFilt = 'all'; render(); };
+const setIF = f => { intelFilt = f; render(); };
+
+/* ═══════════════════════════════════════════════════════════════
+   SYNC ACTIONS
+═══════════════════════════════════════════════════════════════ */
+const openImport   = () => { importing = true;  render(); };
+const cancelImport = () => { importing = false; render(); };
+
+function doImport() {
+  const raw = document.getElementById('importArea')?.value?.trim();
+  if (!raw) { toast('Paste the JSON first'); return; }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed.v || !parsed.tasks) throw new Error();
+    saveData(parsed); importing = false; render(); toast('Synced ✓');
+  } catch { toast('Invalid data — check the JSON'); }
+}
+
+function buildMd(caps) {
+  const now = new Date().toISOString().slice(0,16).replace('T',' ');
+  let md = `<!-- COWORK CAPTURES — ${now} -->\n\n`;
+  caps.forEach(c => { md += `## [${PROJ[c.project]}] ${TICON[c.type]} ${fmtFull(c.ts)}\n${c.text}\n\n`; });
+  return md.trim();
+}
+
+async function copyCaptures() {
+  const md = buildMd(loadCaps().filter(c=>!c.synced));
+  try {
+    await navigator.clipboard.writeText(md);
+    toast('Copied ✓');
+  } catch {
+    const el = document.createElement('textarea');
+    el.value = md; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    toast('Copied ✓');
+  }
+}
+
+function shareCaptures() {
+  const md = buildMd(loadCaps().filter(c=>!c.synced));
+  const date = new Date().toISOString().slice(0,10);
+  const file = new File([md], `captures-${date}.md`, {type:'text/markdown'});
+  if (navigator.share && navigator.canShare?.({files:[file]})) {
+    navigator.share({files:[file], title:'CoWork Captures'});
+  } else if (navigator.share) {
+    navigator.share({text:md, title:'CoWork Captures'});
+  } else { copyCaptures(); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════════════════════ */
+function fmtRel(iso) {
+  const m = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m/60);
+  if (h < 24) return `${h}h ago`;
+  const dd = Math.floor(h/24);
+  if (dd === 1) return 'yesterday';
+  if (dd < 7) return `${dd}d ago`;
+  return new Date(iso).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+}
+
+function fmtFull(iso) {
+  return new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function fmtDate(s) {
+  return new Date(s).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function empty(icon, msg) {
+  return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-text">${msg}</div></div>`;
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LINKEDIN TAB
+═══════════════════════════════════════════════════════════════ */
+
+const LI_PILLARS = [
+  { id:'p1', label:'UI craft + design systems',  color:'#378ADD', tag:'Core' },
+  { id:'p2', label:'AI in design practice',       color:'#7F77DD', tag:'Timely' },
+  { id:'p3', label:'Design in complex products',  color:'#1D9E75', tag:'B2B' },
+  { id:'p4', label:'Designer career + growth',    color:'#BA7517', tag:'Community' },
+];
+
+const LI_SEED = [
+  { id:'T001', pillar:'p1', title:"The component that doesn't exist in any design system", status:'raw' },
+  { id:'T002', pillar:'p2', title:"I've been using Claude in my design process for 3 months", status:'raw' },
+  { id:'T003', pillar:'p3', title:"Designing for users who know more than you", status:'raw' },
+  { id:'T004', pillar:'p1', title:"What I look for when auditing a design system I didn't build", status:'raw' },
+  { id:'T005', pillar:'p4', title:"The design decision I've changed my mind about", status:'raw' },
+];
+
+function loadLI() {
+  try { return JSON.parse(localStorage.getItem('li_ideas') || 'null') || []; } catch { return []; }
+}
+function saveLI(items) { localStorage.setItem('li_ideas', JSON.stringify(items)); }
+
+let liSelPillar = 'p1';
+function liPick(p) { liSelPillar = p; render(); }
+
+function liSaveIdea() {
+  const txt = document.getElementById('liTxt')?.value?.trim();
+  if (!txt) { toast('Write something first'); return; }
+  const ideas = loadLI();
+  const p = LI_PILLARS.find(x => x.id === liSelPillar);
+  ideas.unshift({ id: 'LI' + Date.now(), pillar: liSelPillar, title: txt, status: 'raw', ts: new Date().toISOString() });
+  saveLI(ideas);
+  toast('Idea saved ✓');
+  render();
+}
+
+function renderLinkedin() {
+  const ideas   = loadLI();
+  const backlog = LI_SEED; // static reference from positioning.md
+
+  const pillarDots = LI_PILLARS.map(p => `
+    <button onclick="liPick('${p.id}')" style="
+      flex:1; border:1px solid ${liSelPillar===p.id ? p.color : 'rgba(255,255,255,0.08)'};
+      background:${liSelPillar===p.id ? p.color+'22' : 'var(--s1)'};
+      border-radius:10px; padding:10px 6px; cursor:pointer; text-align:left; position:relative; overflow:hidden;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${p.color};border-radius:3px 0 0 3px;"></div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:3px;padding-left:6px;">${p.tag}</div>
+      <div style="font-size:11px;font-weight:500;color:${liSelPillar===p.id ? '#fff' : 'rgba(255,255,255,0.65)'};line-height:1.3;padding-left:6px;">${p.label}</div>
+    </button>`).join('');
+
+  const captureForm = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="field-label">Pillar</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:14px;">
+        ${pillarDots}
+      </div>
+      <div class="field-label">Idea</div>
+      <textarea id="liTxt" placeholder="Post angle, observation, hook…" style="min-height:80px"></textarea>
+      <button class="btn btn-primary" onclick="liSaveIdea()">Save idea</button>
+    </div>`;
+
+  const ideaRow = (item, dim) => {
+    const p = LI_PILLARS.find(x => x.id === item.pillar) || LI_PILLARS[0];
+    const ts = item.ts ? `<span class="ts">${fmtRel(item.ts)}</span>` : '';
+    return `
+      <div style="background:var(--s1);border:1px solid rgba(255,255,255,0.06);border-radius:10px;
+                  padding:10px 12px 10px 14px;display:flex;align-items:center;gap:10px;
+                  position:relative;overflow:hidden;${dim?'opacity:.45':''}">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${p.color};border-radius:3px 0 0 3px;"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(item.title)}</div>
+          <div style="display:flex;gap:6px;margin-top:3px;align-items:center;">
+            <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:500;background:${p.color}22;color:${p.color};">${p.label.split('&')[0].trim()}</span>
+            <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:rgba(255,255,255,0.06);color:var(--t2);">${item.status}</span>
+            ${ts}
+          </div>
+        </div>
+      </div>`;
+  };
+
+  let html = captureForm;
+
+  if (ideas.length) {
+    html += `<div class="sec"><span class="sec-label">Your captures</span><span class="sec-count">${ideas.length}</span></div>`;
+    html += ideas.map(i => ideaRow(i, false)).join('');
+    html += `<div style="height:12px;"></div>`;
+  }
+
+  html += `<div class="sec"><span class="sec-label">Current backlog</span><span class="sec-count">${backlog.length}</span></div>`;
+  html += backlog.map(i => ideaRow(i, true)).join('');
+
+  return html;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+loadData();
+render();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshHeader(); });
+</script>
+</body>
+</html>
