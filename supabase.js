@@ -77,10 +77,10 @@ const Tasks = {
     return data || []
   },
 
-  async add({ title, section = 'active', project = null, priority = false }) {
+  async add({ title, section = 'active', project = null, priority = false, notes = null }) {
     const user = await getUser()
     const { data, error } = await sb.from('tasks')
-      .insert({ title, section, project, priority, user_id: user.id })
+      .insert({ title, section, project, priority, notes, user_id: user.id })
       .select().single()
     if (error) console.error('Tasks.add:', error)
     return data
