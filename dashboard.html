@@ -1257,6 +1257,8 @@
     .view-toggle button.active { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; color: var(--text-primary) !important; }
     .memory-tab.active { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; color: var(--text-primary) !important; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
 </head>
 <body>
   <header>
@@ -1282,7 +1284,7 @@
     </div>
     <div class="buttons">
       <button id="restoreBtn" style="display: none;">↩ Restore workspace</button>
-      <button id="openTaskBtn">Select File</button>
+      <button id="openTaskBtn" style="display: none;">Refresh</button>
       <button id="openMemoryBtn" style="display: none;">Open Folder</button>
       <button id="openStatusBtn" style="display: none;">Open Folder</button>
       <button id="saveBtn" class="primary" disabled style="display: none;">Save</button>
@@ -1294,8 +1296,7 @@
     <div class="list-view" id="listView" style="display: none;"></div>
     <div class="board" id="board">
       <div class="empty-state" id="boardEmptyState" style="width: 100%;">
-        <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--text-primary);">Select your TASKS.md file</p>
-        <button id="openBtnLarge">Select TASKS.md</button>
+        <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--text-primary);" id="boardEmptyMsg">Loading tasks…</p>
       </div>
     </div>
   </div>
@@ -1564,14 +1565,14 @@
       taskViewToggle.style.display = tab === 'tasks' ? 'flex' : 'none';
 
       // Show/hide appropriate buttons
-      openTaskBtn.style.display = tab === 'tasks' ? 'inline-flex' : 'none';
+      openTaskBtn.style.display = 'none';
       openMemoryBtn.style.display = tab === 'memory' ? 'inline-flex' : 'none';
       openStatusBtn.style.display = (tab === 'status' && !statusDirHandle) ? 'inline-flex' : 'none';
-      saveBtn.style.display = tab === 'tasks' ? 'inline-flex' : 'none';
+      saveBtn.style.display = 'none';
 
       // Update file path display
       if (tab === 'tasks') {
-        filePathEl.textContent = taskFileHandle ? taskFileName : '';
+        filePathEl.textContent = 'Supabase';
       } else if (tab === 'memory') {
         filePathEl.textContent = memoryDirHandle ? memoryDirHandle.name : '';
       } else if (tab === 'status') {
@@ -1609,10 +1610,9 @@
     // ===== TASKS FUNCTIONALITY =====
     // ============================================================
 
-    let taskFileHandle = null;
-    let taskFileName = '';
     let sections = [];
     let tasks = {};
+    let _dbTaskIds = new Set(); // Supabase UUIDs of rows we've loaded
     let hasChanges = false;
     let currentView = 'board';
     let quickAddSection = null;
@@ -2125,64 +2125,109 @@
         const idx = sectionTasks.findIndex(t => t.id === task.id);
         if (idx !== -1) { sectionTasks.splice(idx, 1); break; }
       }
+      // Track for Supabase deletion
+      if (_dbTaskIds.has(String(task.id))) _removedIds.push(task.id);
       markChanged();
       renderTasks();
     }
 
     let saveTimeout = null;
-    let lastModified = 0;
-    let watchInterval = null;
     let isSaving = false;
+    let _removedIds = []; // Supabase UUIDs deleted locally, need to sync
 
     function markChanged() {
       hasChanges = true;
-      saveBtn.disabled = false;
       if (saveTimeout) clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(autoSave, 500);
+      saveTimeout = setTimeout(syncToSupabase, 600);
     }
 
-    async function autoSave() {
-      if (!taskFileHandle || !hasChanges || isSaving) return;
+    async function syncToSupabase() {
+      if (isSaving) return;
       isSaving = true;
       try {
-        const writable = await taskFileHandle.createWritable();
-        const content = toMarkdown();
-        await writable.write(content);
-        await writable.close();
-        const file = await taskFileHandle.getFile();
-        lastModified = file.lastModified;
+        // Upsert all in-memory tasks to Supabase
+        const allTasks = Object.values(tasks).flat();
+        for (const t of allTasks) {
+          if (_dbTaskIds.has(String(t.id))) {
+            await Tasks.update(t.id, {
+              title: t.title,
+              section: t.section,
+              done: !!t.checked,
+              priority: !!t.priority,
+              project: t.project || null
+            });
+          } else {
+            const row = await Tasks.add({
+              title: t.title,
+              section: t.section || 'active',
+              priority: !!t.priority,
+              project: t.project || null
+            });
+            if (row) {
+              // Replace ephemeral ID with Supabase UUID
+              const oldId = t.id;
+              t.id = row.id;
+              t._dbId = row.id;
+              _dbTaskIds.add(row.id);
+            }
+          }
+        }
+        // Delete tasks removed from UI
+        for (const id of _removedIds) {
+          await Tasks.remove(id);
+        }
+        _removedIds = [];
         hasChanges = false;
-        saveBtn.disabled = true;
-        showStatus('Saved');
+        showStatus('Synced ✓');
       } catch (e) {
-        showStatus('Save failed: ' + e.message);
+        showStatus('Sync error');
+        console.error('syncToSupabase:', e);
       }
       isSaving = false;
     }
 
-    async function checkForExternalChanges() {
-      if (!taskFileHandle || hasChanges || isSaving) return;
+    async function loadTasksFromDB() {
+      const el = document.getElementById('boardEmptyMsg');
+      if (el) el.textContent = 'Loading tasks…';
       try {
-        const file = await taskFileHandle.getFile();
-        if (file.lastModified > lastModified) {
-          lastModified = file.lastModified;
-          const content = await file.text();
-          const result = parseTaskMarkdown(content);
-          sections = result.sections;
-          tasks = result.tasks;
-          renderTasks();
-          showStatus('Reloaded');
-        }
-      } catch (e) { console.log('Watch error:', e); }
-    }
+        const rows = await Tasks.list();
+        _dbTaskIds = new Set(rows.map(r => r.id));
 
-    function startWatching() {
-      if (watchInterval) clearInterval(watchInterval);
-      watchInterval = setInterval(checkForExternalChanges, 1000);
-    }
+        const SECTION_ORDER = ['active', 'waiting', 'someday', 'done'];
+        const SECTION_NAMES = { active: 'Active', waiting: 'Waiting on', someday: 'Someday', done: 'Done' };
+        const usedSections = [...new Set(rows.map(r => r.section || 'active'))];
+        const ordered = SECTION_ORDER.filter(s => usedSections.includes(s));
+        // include any custom sections not in the standard list
+        usedSections.filter(s => !SECTION_ORDER.includes(s)).forEach(s => ordered.push(s));
+        // always show Active + Waiting + Someday even if empty
+        ['active', 'waiting', 'someday'].forEach(s => { if (!ordered.includes(s)) ordered.push(s); });
 
-    function stopWatching() {
-      if (watchInterval) { clearInterval(watchInterval); watchInterval = null; }
+        sections = ordered.map(s => ({ id: s, name: SECTION_NAMES[s] || s }));
+        tasks = {};
+        sections.forEach(s => tasks[s.id] = []);
+
+        rows.forEach(row => {
+          const sec = row.section || 'active';
+          if (!tasks[sec]) tasks[sec] = [];
+          tasks[sec].push({
+            id: row.id,
+            _dbId: row.id,
+            title: row.title,
+            note: '',
+            checked: !!row.done,
+            subtasks: [],
+            section: sec,
+            project: row.project,
+            priority: !!row.priority
+          });
+        });
+
+        switchTaskView(currentView);
+        if (el) el.textContent = rows.length ? '' : 'No tasks yet — add one in Capture';
+      } catch (e) {
+        if (el) el.textContent = 'Failed to load tasks';
+        console.error('loadTasksFromDB:', e);
+      }
     }
 
     function renderTasks() {
@@ -2725,42 +2770,7 @@
       input.addEventListener('blur', saveSection);
     }
 
-    async function openTaskFile() {
-      try {
-        [taskFileHandle] = await window.showOpenFilePicker({
-          types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }]
-        });
-        const file = await taskFileHandle.getFile();
-        const content = await file.text();
-        lastModified = file.lastModified;
-        const result = parseTaskMarkdown(content);
-        sections = result.sections;
-        tasks = result.tasks;
-        switchTaskView('board');
-        startWatching();
-        taskFileName = file.name;
-        filePathEl.textContent = file.name;
-        showStatus('Loaded ' + file.name);
-        if (typeof _saveHandle === 'function') await _saveHandle('taskFile', taskFileHandle);
-      } catch (e) {
-        if (e.name !== 'AbortError') { showStatus('Error: ' + e.message); }
-      }
-    }
-
-    openTaskBtn.addEventListener('click', openTaskFile);
-    document.getElementById('openBtnLarge')?.addEventListener('click', openTaskFile);
-
-    saveBtn.addEventListener('click', async () => {
-      if (!taskFileHandle) return;
-      try {
-        const writable = await taskFileHandle.createWritable();
-        await writable.write(toMarkdown());
-        await writable.close();
-        hasChanges = false;
-        saveBtn.disabled = true;
-        showStatus('Saved');
-      } catch (e) { showStatus('Error: ' + e.message); }
-    });
+    openTaskBtn.addEventListener('click', loadTasksFromDB);
 
     window.addEventListener('beforeunload', (e) => {
       if (hasChanges) { e.preventDefault(); e.returnValue = ''; }
@@ -3478,8 +3488,7 @@
     }
 
     function countActiveTasks() {
-      // Count tasks in the Active section of loaded TASKS.md using the shared `sections` var
-      if (!taskFileHandle) return null;
+      // Count unchecked tasks in the Active section (loaded from Supabase)
       try {
         const activeSection = sections.find(s => s.id === 'active');
         if (!activeSection) return 0;
@@ -3755,24 +3764,6 @@
 
     const restoreBtn = document.getElementById('restoreBtn');
 
-    async function _restoreTaskHandle(h, withGesture) {
-      const perm = await h.queryPermission({ mode: 'readwrite' });
-      if (perm !== 'granted' && !withGesture) return false;
-      const granted = perm === 'granted' || (await h.requestPermission({ mode: 'readwrite' })) === 'granted';
-      if (!granted) return false;
-      taskFileHandle = h;
-      const file = await h.getFile();
-      taskFileName = file.name;
-      lastModified = file.lastModified;
-      const result = parseTaskMarkdown(await file.text());
-      sections = result.sections;
-      tasks = result.tasks;
-      switchTaskView('board');
-      startWatching();
-      if (activeMainTab === 'tasks') filePathEl.textContent = file.name;
-      return true;
-    }
-
     async function _restoreMemoryHandle(h, withGesture) {
       const perm = await h.queryPermission({ mode: 'readwrite' });
       if (perm !== 'granted' && !withGesture) return false;
@@ -3824,20 +3815,22 @@
       return true;
     }
 
-    // On page load: try silent restore, show button for anything needing a gesture
+    // On page load: auth check + load tasks from Supabase, then restore file handles for memory/status
     (async function initRestore() {
-      const [hTask, hMemory, hStatus] = await Promise.all([
-        _loadHandle('taskFile'),
+      // Require auth — redirects to login.html if not signed in
+      await requireAuth();
+
+      // Load tasks from Supabase (replaces TASKS.md file approach)
+      await loadTasksFromDB();
+
+      // Restore memory + status directory handles (still file-based)
+      const [hMemory, hStatus] = await Promise.all([
         _loadHandle('memoryDir'),
         _loadHandle('statusDir'),
       ]);
 
       let needsGesture = [];
 
-      if (hTask) {
-        try { if (!await _restoreTaskHandle(hTask, false)) needsGesture.push({ key: 'task', h: hTask }); }
-        catch (e) { needsGesture.push({ key: 'task', h: hTask }); }
-      }
       if (hMemory) {
         try { if (!await _restoreMemoryHandle(hMemory, false)) needsGesture.push({ key: 'memory', h: hMemory }); }
         catch (e) { needsGesture.push({ key: 'memory', h: hMemory }); }
@@ -3854,17 +3847,21 @@
           restoreBtn.textContent = 'Restoring…';
           for (const { key, h } of needsGesture) {
             try {
-              if (key === 'task')   await _restoreTaskHandle(h, true);
               if (key === 'memory') await _restoreMemoryHandle(h, true);
               if (key === 'status') await _restoreStatusHandle(h, true);
             } catch (e) { /* skip failed handle */ }
           }
           restoreBtn.style.display = 'none';
           showStatus('Workspace restored');
-          // Refresh current tab display
           switchMainTab(activeMainTab);
         }, { once: true });
       }
+
+      // Real-time: refresh tasks when capture.html adds/changes them
+      Tasks.subscribe(async () => {
+        await loadTasksFromDB();
+        if (activeMainTab === 'tasks') renderTasks();
+      });
     })();
   </script>
 </body>

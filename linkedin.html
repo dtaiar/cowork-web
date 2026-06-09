@@ -383,6 +383,8 @@
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
 </head>
 <body>
 
@@ -433,36 +435,19 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   SEED
+   STATE (loaded from Supabase)
 ═══════════════════════════════════════════════════════════════ */
-const SEED = {
-  v: 1,
-  posts: [
-    {id:"lp1", idea:"How I built a personal design OS with AI", draft:"", status:"idea", topic:"tools", created:"2026-06-01T00:00:00Z", posted:null},
-    {id:"lp2", idea:"The real cost of design fragmentation across 6 tools", draft:"", status:"idea", topic:"product", created:"2026-06-06T00:00:00Z", posted:null},
-    {id:"lp3", idea:"Mobile color systems in energy trading UI — the gas commodity problem", draft:"", status:"idea", topic:"design", created:"2026-06-07T00:00:00Z", posted:null},
-    {id:"lp4", idea:"The filter panel problem — why data tables fail on mobile", draft:"Most enterprise tools treat mobile as an afterthought.\n\nThe real problem isn't screen size. It's that filtering on mobile requires three taps to do what a desktop user does in one. Every extra tap is friction — and for traders, friction costs decisions.\n\nI ran into this redesigning the positions screen for an energy trading tool. The filters were buried two levels deep. Users didn't know they existed.\n\nWe moved them to a persistent drawer that slides in from the right. One tap. Visible on load. Done.\n\nSometimes the UX fix isn't clever. It's just less hidden.", status:"drafting", topic:"design", created:"2026-06-03T00:00:00Z", posted:null},
-    {id:"lp5", idea:"5 things I learned from redesigning a hedging tool for energy traders", draft:"Energy trading UX is a different world.\n\nTraders make split-second decisions. The UI has one job: never slow them down.\n\nHere's what I learned redesigning a hedging tool from scratch:\n\n1. Information density wins over white space. These users want more data, not less.\n2. Confirmation dialogs are friction. One-click actions with instant undo beat double-confirmation every time.\n3. Colour means something. Red/green aren't aesthetic choices — they're domain language.\n4. Loading states need to be fast or invisible. A 200ms spinner is worse than no spinner.\n5. Trust the users. They know their domain better than you know UX.\n\nThe best design decisions I made were the ones I made after watching a trader use the tool for 15 minutes.", status:"ready", topic:"casestudy", created:"2026-06-05T00:00:00Z", posted:null},
-    {id:"lp6", idea:"Why I stopped designing in isolation", draft:"I used to present designs. Now I co-design.\n\nThe shift happened when a PM looked at a flow I'd spent two weeks on and said: \"We changed the requirement last Tuesday.\"\n\nNo one told me. The design was already obsolete.\n\nNow I work in the open — shared Figma, daily standup callouts, Confluence pages updated before the meeting. It costs more time up front and saves weeks on the back end.\n\nDesign in isolation is a bet that nothing will change. It never pays off.", status:"posted", topic:"personal", created:"2026-06-01T00:00:00Z", posted:"2026-06-02T00:00:00Z"},
-  ]
-};
+let state = { posts: [] };
 
 /* ═══════════════════════════════════════════════════════════════
-   STORAGE
-═══════════════════════════════════════════════════════════════ */
-const LK = 'cw_linkedin_v1';
-const loadPosts = () => { try { const d = JSON.parse(localStorage.getItem(LK)); if (d?.v) return d; } catch {} localStorage.setItem(LK, JSON.stringify(SEED)); return SEED; };
-const savePosts = d => localStorage.setItem(LK, JSON.stringify(d));
-
-/* ═══════════════════════════════════════════════════════════════
-   STATE
+   APP STATE
 ═══════════════════════════════════════════════════════════════ */
 let tab       = 'ideas';
 let topicFilt = 'all';
 let editingId = null;
-let importing = false;
+let selTopic  = 'design';
 
-const TOPICS = { design:'Design', product:'Product', tools:'Tools', personal:'Personal', casestudy:'Case Study' };
+const TOPICS  = { design:'Design', product:'Product', tools:'Tools', personal:'Personal', casestudy:'Case Study' };
 const MAX_CHARS = 3000;
 
 /* ═══════════════════════════════════════════════════════════════
@@ -487,13 +472,11 @@ function refreshHeader() {
   document.getElementById('hdDate').textContent =
     `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
 
-  const d = loadPosts();
-  const ready = (d.posts || []).filter(p => p.status === 'ready').length;
+  const ready = state.posts.filter(p => p.status === 'ready').length;
   document.getElementById('hdSub').textContent = ready > 0 ? `${ready} ready to post` : '';
 
-  // Badges
   const counts = { ideas: 0, drafting: 0, ready: 0 };
-  (d.posts || []).forEach(p => {
+  state.posts.forEach(p => {
     if (p.status === 'idea')     counts.ideas++;
     if (p.status === 'drafting') counts.drafting++;
     if (p.status === 'ready')    counts.ready++;
@@ -520,7 +503,6 @@ function render() {
 
   refreshHeader();
 
-  // Restore char counter if editing
   if (editingId) {
     const ta = document.getElementById('draftArea_' + editingId);
     if (ta) ta.addEventListener('input', () => updateCharCount(editingId));
@@ -531,8 +513,7 @@ function render() {
    IDEAS TAB
 ═══════════════════════════════════════════════════════════════ */
 function renderIdeas() {
-  const d = loadPosts();
-  const all = (d.posts || []).filter(p => p.status === 'idea');
+  const all      = state.posts.filter(p => p.status === 'idea');
   const filtered = topicFilt === 'all' ? all : all.filter(p => p.topic === topicFilt);
 
   const form = `
@@ -567,10 +548,10 @@ function renderIdeas() {
     list += `
       <div class="post-card">
         <div class="meta">
-          <span class="badge b-${p.topic}">${TOPICS[p.topic]}</span>
-          <span class="ts">${fmtDate(p.created)}</span>
+          <span class="badge b-${p.topic}">${TOPICS[p.topic] || p.topic}</span>
+          <span class="ts">${fmtDate(p.created_at)}</span>
         </div>
-        <div class="body-t">${esc(p.idea)}</div>
+        <div class="body-t">${esc(p.hook)}</div>
         <div class="post-actions">
           <button class="btn btn-secondary" onclick="startDraft('${p.id}')">Start draft</button>
           <button class="btn btn-danger" onclick="deletePost('${p.id}')">Delete</button>
@@ -585,8 +566,7 @@ function renderIdeas() {
    DRAFTING TAB
 ═══════════════════════════════════════════════════════════════ */
 function renderDrafting() {
-  const d = loadPosts();
-  const items = (d.posts || []).filter(p => p.status === 'drafting');
+  const items = state.posts.filter(p => p.status === 'drafting');
 
   if (!items.length) return `<div class="empty"><div class="empty-icon">✏️</div><div class="empty-text">No posts in drafting.<br>Pick an idea and start writing.</div></div>`;
 
@@ -594,22 +574,22 @@ function renderDrafting() {
 
   items.forEach(p => {
     const isEditing = editingId === p.id;
-    const charLen   = (p.draft || '').length;
+    const charLen   = (p.content || '').length;
     const charClass = charLen > 2900 ? 'char-over' : charLen > 2500 ? 'char-warn' : 'char-ok';
 
     html += `
       <div class="post-card">
         <div class="meta">
-          <span class="badge b-${p.topic}">${TOPICS[p.topic]}</span>
+          <span class="badge b-${p.topic}">${TOPICS[p.topic] || p.topic}</span>
           <span class="badge b-drafting">Drafting</span>
-          <span class="ts">${fmtDate(p.created)}</span>
+          <span class="ts">${fmtDate(p.created_at)}</span>
         </div>
-        <div class="body-t">${esc(p.idea)}</div>
-        ${p.draft && !isEditing ? `<div class="draft-preview">${esc(p.draft)}</div>` : ''}
+        <div class="body-t">${esc(p.hook)}</div>
+        ${p.content && !isEditing ? `<div class="draft-preview">${esc(p.content)}</div>` : ''}
 
         ${isEditing ? `
           <div class="editor-wrap">
-            <textarea id="draftArea_${p.id}" oninput="updateCharCount('${p.id}')">${esc(p.draft)}</textarea>
+            <textarea id="draftArea_${p.id}" oninput="updateCharCount('${p.id}')">${esc(p.content)}</textarea>
             <div class="char-counter ${charClass}" id="charCount_${p.id}">${charLen} / ${MAX_CHARS}</div>
             <div class="btn-row">
               <button class="btn btn-success" onclick="saveDraft('${p.id}')">Save</button>
@@ -634,28 +614,27 @@ function renderDrafting() {
    READY TAB
 ═══════════════════════════════════════════════════════════════ */
 function renderReady() {
-  const d = loadPosts();
-  const items = (d.posts || []).filter(p => p.status === 'ready');
+  const items = state.posts.filter(p => p.status === 'ready');
 
   if (!items.length) return `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Nothing ready yet.<br>Finish a draft and mark it ready.</div></div>`;
 
   let html = `<div class="sec"><span class="sec-label">Ready to post</span><span class="sec-count">${items.length}</span></div>`;
 
   items.forEach(p => {
-    const charLen = (p.draft || '').length;
+    const charLen   = (p.content || '').length;
     const isExpanded = editingId === p.id;
 
     html += `
       <div class="post-card" style="border-color: rgba(61,200,122,.2)">
         <div class="meta">
-          <span class="badge b-${p.topic}">${TOPICS[p.topic]}</span>
+          <span class="badge b-${p.topic}">${TOPICS[p.topic] || p.topic}</span>
           <span class="badge b-ready">Ready</span>
           <span class="ts">${charLen} chars</span>
         </div>
-        <div class="body-t">${esc(p.idea)}</div>
+        <div class="body-t">${esc(p.hook)}</div>
         ${isExpanded
-          ? `<div class="draft-full">${esc(p.draft)}</div>`
-          : p.draft ? `<div class="draft-preview">${esc(p.draft)}</div>` : ''}
+          ? `<div class="draft-full">${esc(p.content)}</div>`
+          : p.content ? `<div class="draft-preview">${esc(p.content)}</div>` : ''}
         <div class="post-actions">
           <button class="btn btn-success" onclick="copyAndPost('${p.id}')">Copy &amp; post →</button>
           <button class="btn btn-secondary" onclick="${isExpanded ? `closeEditor()` : `openEditor('${p.id}')`}">
@@ -673,8 +652,9 @@ function renderReady() {
    POSTED TAB
 ═══════════════════════════════════════════════════════════════ */
 function renderPosted() {
-  const d = loadPosts();
-  const items = (d.posts || []).filter(p => p.status === 'posted').sort((a,b) => new Date(b.posted) - new Date(a.posted));
+  const items = state.posts
+    .filter(p => p.status === 'posted')
+    .sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at));
 
   if (!items.length) return `<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Nothing posted yet.</div></div>`;
 
@@ -685,14 +665,14 @@ function renderPosted() {
     html += `
       <div class="post-card" style="opacity:0.7">
         <div class="meta">
-          <span class="badge b-${p.topic}">${TOPICS[p.topic]}</span>
+          <span class="badge b-${p.topic}">${TOPICS[p.topic] || p.topic}</span>
           <span class="badge b-posted">Posted</span>
-          <span class="ts">${p.posted ? fmtDate(p.posted) : '—'}</span>
+          <span class="ts">${fmtDate(p.updated_at)}</span>
         </div>
-        <div class="body-t">${esc(p.idea)}</div>
-        ${isExpanded && p.draft ? `<div class="draft-full">${esc(p.draft)}</div>` : ''}
+        <div class="body-t">${esc(p.hook)}</div>
+        ${isExpanded && p.content ? `<div class="draft-full">${esc(p.content)}</div>` : ''}
         <div class="post-actions">
-          ${p.draft ? `<button class="btn btn-secondary" onclick="${isExpanded ? `closeEditor()` : `openEditor('${p.id}')`}">${isExpanded ? 'Collapse' : 'Read'}</button>` : ''}
+          ${p.content ? `<button class="btn btn-secondary" onclick="${isExpanded ? `closeEditor()` : `openEditor('${p.id}')`}">${isExpanded ? 'Collapse' : 'Read'}</button>` : ''}
           <button class="btn btn-secondary" onclick="moveStatus('${p.id}','ready')">Repost</button>
           <button class="btn btn-danger" onclick="deletePost('${p.id}')">Delete</button>
         </div>
@@ -705,22 +685,16 @@ function renderPosted() {
 /* ═══════════════════════════════════════════════════════════════
    ACTIONS
 ═══════════════════════════════════════════════════════════════ */
-let selTopic = 'design';
 const setTopic = t => { selTopic = t; render(); };
-const setTF = f => { topicFilt = f; render(); };
+const setTF    = f => { topicFilt = f; render(); };
 
-function addIdea() {
+async function addIdea() {
   const el = document.getElementById('ideaInput');
   const text = el?.value?.trim();
   if (!text) { toast('Write the idea first'); return; }
-  const d = loadPosts();
-  d.posts.unshift({
-    id: Date.now().toString(36),
-    idea: text, draft: '',
-    status: 'idea', topic: selTopic,
-    created: new Date().toISOString(), posted: null
-  });
-  savePosts(d);
+  const row = await LI.add({ topic: selTopic, hook: text, content: '', status: 'idea' });
+  if (row) state.posts.unshift(row);
+  el.value = '';
   toast('Added to backlog ✓');
   render();
 }
@@ -739,14 +713,18 @@ function startDraft(id) {
 const openEditor  = id => { editingId = id; render(); };
 const closeEditor = ()  => { editingId = null; render(); };
 
-function saveDraft(id) {
+async function saveDraft(id) {
   const ta = document.getElementById('draftArea_' + id);
   if (!ta) return;
   const text = ta.value;
   if (text.length > MAX_CHARS) { toast(`Over ${MAX_CHARS} chars — trim it`); return; }
-  const d = loadPosts();
-  const p = d.posts.find(x => x.id === id);
-  if (p) { p.draft = text; savePosts(d); toast('Draft saved ✓'); closeEditor(); }
+  const updated = await LI.update(id, { content: text });
+  if (updated) {
+    const p = state.posts.find(x => x.id === id);
+    if (p) p.content = text;
+  }
+  toast('Draft saved ✓');
+  closeEditor();
 }
 
 function updateCharCount(id) {
@@ -758,29 +736,30 @@ function updateCharCount(id) {
   cc.className = 'char-counter ' + (len > 2900 ? 'char-over' : len > 2500 ? 'char-warn' : 'char-ok');
 }
 
-function moveStatus(id, newStatus) {
-  const d = loadPosts();
-  const p = d.posts.find(x => x.id === id);
-  if (!p) return;
-  p.status = newStatus;
-  if (newStatus === 'posted' && !p.posted) p.posted = new Date().toISOString();
-  savePosts(d); editingId = null; render();
+async function moveStatus(id, newStatus) {
+  const updated = await LI.update(id, { status: newStatus });
+  const p = state.posts.find(x => x.id === id);
+  if (p && updated) {
+    p.status = newStatus;
+    p.updated_at = updated.updated_at;
+  }
+  editingId = null;
+  render();
 }
 
 async function copyAndPost(id) {
-  const d = loadPosts();
-  const p = d.posts.find(x => x.id === id);
-  if (!p || !p.draft) { toast('No draft to copy'); return; }
+  const p = state.posts.find(x => x.id === id);
+  if (!p || !p.content) { toast('No draft to copy'); return; }
   try {
-    await navigator.clipboard.writeText(p.draft);
+    await navigator.clipboard.writeText(p.content);
   } catch {
     const el = document.createElement('textarea');
-    el.value = p.draft; document.body.appendChild(el); el.select();
+    el.value = p.content; document.body.appendChild(el); el.select();
     document.execCommand('copy'); document.body.removeChild(el);
   }
-  p.status = 'posted';
-  p.posted = new Date().toISOString();
-  savePosts(d); editingId = null;
+  const updated = await LI.update(id, { status: 'posted' });
+  if (updated) { p.status = 'posted'; p.updated_at = updated.updated_at; }
+  editingId = null;
   tab = 'posted';
   document.querySelectorAll('.nav-btn').forEach(b =>
     b.classList.toggle('active', b.id === 'nb-posted')
@@ -789,11 +768,12 @@ async function copyAndPost(id) {
   toast('Copied & marked as posted ✓');
 }
 
-function deletePost(id) {
+async function deletePost(id) {
   if (!confirm('Delete this post?')) return;
-  const d = loadPosts();
-  d.posts = d.posts.filter(x => x.id !== id);
-  savePosts(d); editingId = null; render();
+  await LI.remove(id);
+  state.posts = state.posts.filter(x => x.id !== id);
+  editingId = null;
+  render();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -806,10 +786,8 @@ function fmtDate(iso) {
 function esc(s) {
   if (!s) return '';
   return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 let toastTimer;
@@ -823,8 +801,13 @@ function toast(msg) {
 /* ═══════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════ */
-loadPosts(); // seed if empty
-render();
+async function init() {
+  await requireAuth();
+  state.posts = await LI.list();
+  render();
+}
+
+init();
 </script>
 </body>
 </html>

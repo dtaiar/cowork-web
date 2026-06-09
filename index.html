@@ -275,6 +275,8 @@
       font-weight: 500;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
 </head>
 <body>
 
@@ -360,51 +362,52 @@
   document.getElementById('greeting').textContent =
     hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
 
-  // Live stats from localStorage (all apps share the same origin on GitHub Pages)
-  function loadStats() {
-    // — Capture —
-    try {
-      const caps = JSON.parse(localStorage.getItem('cw_captures_v3') || '[]');
-      const pending = caps.filter(c => !c.synced).length;
-      document.getElementById('statCaptures').textContent = pending;
-      const tags = document.getElementById('captureTags');
-      if (pending > 0) {
-        tags.innerHTML = `<span class="app-tag blue">${pending} pending sync</span>`;
-      } else {
-        tags.innerHTML = `<span class="app-tag green">All synced</span>`;
-      }
-    } catch { document.getElementById('statCaptures').textContent = '0'; }
+  // Live stats from Supabase
+  async function loadStats() {
+    // Require auth — redirects to login.html if not signed in
+    const user = await getUser();
+    if (!user) { window.location.href = 'login.html'; return; }
 
-    // — Dashboard —
     try {
-      const data  = JSON.parse(localStorage.getItem('cw_data_v3') || '{}');
-      const tasks = data.tasks || [];
-      const active   = tasks.filter(t => t.section === 'active' && !t.done).length;
-      const waiting  = tasks.filter(t => t.section === 'waiting' && !t.done).length;
-      const urgent   = (data.blockers || []).filter(b => b.urgent).length;
-      document.getElementById('statTasks').textContent = active;
-      const tags = document.getElementById('dashTags');
-      let html = `<span class="app-tag amber">${active} active</span>`;
-      if (waiting)  html += `<span class="app-tag">${waiting} waiting</span>`;
-      if (urgent)   html += `<span class="app-tag red">${urgent} urgent</span>`;
-      tags.innerHTML = html;
-    } catch { document.getElementById('statTasks').textContent = '0'; }
+      // Load counts in parallel
+      const [caps, tasks, intel, li] = await Promise.all([
+        sb.from('captures').select('id', { count: 'exact', head: true }),
+        sb.from('tasks').select('id', { count: 'exact', head: true }).eq('done', false).neq('section', 'done'),
+        sb.from('intel').select('id', { count: 'exact', head: true }).eq('resolved', false).eq('urgent', true),
+        sb.from('linkedin_posts').select('id, status', { count: 'exact' })
+      ]);
 
-    // — LinkedIn —
-    try {
-      const li    = JSON.parse(localStorage.getItem('cw_linkedin_v1') || '{"v":1,"posts":[]}');
-      const posts = li.posts || [];
-      const ready    = posts.filter(p => p.status === 'ready').length;
-      const drafting = posts.filter(p => p.status === 'drafting').length;
-      const ideas    = posts.filter(p => p.status === 'idea').length;
+      // — Capture —
+      const capCount = caps.count || 0;
+      document.getElementById('statCaptures').textContent = capCount;
+      document.getElementById('captureTags').innerHTML =
+        capCount > 0
+          ? `<span class="app-tag blue">${capCount} capture${capCount !== 1 ? 's' : ''}</span>`
+          : `<span class="app-tag green">Nothing captured yet</span>`;
+
+      // — Dashboard tasks —
+      const taskCount = tasks.count || 0;
+      document.getElementById('statTasks').textContent = taskCount;
+      const urgentCount = intel.count || 0;
+      let taskHtml = `<span class="app-tag amber">${taskCount} active</span>`;
+      if (urgentCount) taskHtml += `<span class="app-tag red">${urgentCount} urgent</span>`;
+      document.getElementById('dashTags').innerHTML = taskHtml;
+
+      // — LinkedIn —
+      const liPosts   = li.data || [];
+      const ready     = liPosts.filter(p => p.status === 'ready').length;
+      const drafting  = liPosts.filter(p => p.status === 'drafting').length;
+      const ideas     = liPosts.filter(p => p.status === 'idea').length;
       document.getElementById('statLinkedIn').textContent = ready;
-      const tags = document.getElementById('linkedinTags');
-      let html = `<span class="app-tag">${posts.length} posts</span>`;
-      if (ready)    html += `<span class="app-tag violet">${ready} ready</span>`;
-      if (drafting) html += `<span class="app-tag amber">${drafting} drafting</span>`;
-      if (ideas)    html += `<span class="app-tag">${ideas} ideas</span>`;
-      tags.innerHTML = html;
-    } catch { document.getElementById('statLinkedIn').textContent = '0'; }
+      let liHtml = `<span class="app-tag">${liPosts.length} posts</span>`;
+      if (ready)   liHtml += `<span class="app-tag violet">${ready} ready</span>`;
+      if (drafting) liHtml += `<span class="app-tag amber">${drafting} drafting</span>`;
+      if (ideas)    liHtml += `<span class="app-tag">${ideas} ideas</span>`;
+      document.getElementById('linkedinTags').innerHTML = liHtml;
+
+    } catch (e) {
+      console.error('loadStats:', e);
+    }
   }
 
   loadStats();
