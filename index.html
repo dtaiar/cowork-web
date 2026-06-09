@@ -180,7 +180,8 @@
     }
 
     .icon-capture  { background: linear-gradient(145deg,#3A7EF0,#5B8CF8); }
-    .icon-dash     { background: linear-gradient(145deg,#E09020,#F0A928); }
+    .icon-planner  { background: linear-gradient(145deg,#E09020,#F0A928); }
+    .icon-context  { background: linear-gradient(145deg,#2A7A5A,#3DC87A); }
     .icon-linkedin { background: linear-gradient(145deg,#8A6DE8,#C879F0); }
 
     .app-meta { flex: 1; min-width: 0; }
@@ -317,19 +318,35 @@
   </div>
 </a>
 
-<a class="app-card" href="dashboard.html">
+<a class="app-card" href="planner.html">
   <div class="app-top">
-    <div class="app-icon icon-dash">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <div class="app-icon icon-planner">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
     </div>
     <div class="app-meta">
-      <div class="app-name">Dashboard</div>
-      <div class="app-desc">Tasks, blockers, decisions, actions</div>
+      <div class="app-name">Planner</div>
+      <div class="app-desc">Tasks and project work board</div>
     </div>
     <div class="app-chevron">›</div>
   </div>
-  <div class="app-tags" id="dashTags">
+  <div class="app-tags" id="plannerTags">
     <span class="app-tag">Productivity</span>
+  </div>
+</a>
+
+<a class="app-card" href="context.html">
+  <div class="app-top">
+    <div class="app-icon icon-context">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+    <div class="app-meta">
+      <div class="app-name">Context</div>
+      <div class="app-desc">Memory, status briefs, glossary</div>
+    </div>
+    <div class="app-chevron">›</div>
+  </div>
+  <div class="app-tags" id="contextTags">
+    <span class="app-tag">Knowledge</span>
   </div>
 </a>
 
@@ -385,13 +402,17 @@
           ? `<span class="app-tag blue">${capCount} capture${capCount !== 1 ? 's' : ''}</span>`
           : `<span class="app-tag green">Nothing captured yet</span>`;
 
-      // — Dashboard tasks —
+      // — Planner tasks —
       const taskCount = tasks.count || 0;
       document.getElementById('statTasks').textContent = taskCount;
       const urgentCount = intel.count || 0;
       let taskHtml = `<span class="app-tag amber">${taskCount} active</span>`;
       if (urgentCount) taskHtml += `<span class="app-tag red">${urgentCount} urgent</span>`;
-      document.getElementById('dashTags').innerHTML = taskHtml;
+      document.getElementById('plannerTags').innerHTML = taskHtml;
+
+      // — Context —
+      document.getElementById('contextTags').innerHTML =
+        `<span class="app-tag green">Knowledge hub</span>`;
 
       // — LinkedIn —
       const liPosts   = li.data || [];
