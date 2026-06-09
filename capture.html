@@ -1173,12 +1173,20 @@ async function addCap() {
   const el = document.getElementById('ct');
   const content = el?.value?.trim();
   if (!content) { toast('Write something first'); return; }
-  const cap = await Captures.add({ project: selProj, type: selType, content });
-  if (cap) state.captures.unshift(cap);
-  el.value = '';
-  toast('Saved ✓');
-  render();
-  refreshHeader();
+  try {
+    const cap = await Captures.add({ project: selProj, type: selType, content });
+    if (cap) {
+      state.captures.unshift(cap);
+      el.value = '';
+      toast('Saved ✓');
+      render();
+      refreshHeader();
+    } else {
+      toast('Save failed — check connection');
+    }
+  } catch (e) {
+    toast('Error: ' + (e.message || 'Save failed'));
+  }
 }
 
 async function delCap(id) {

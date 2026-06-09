@@ -45,10 +45,11 @@ const Captures = {
 
   async add({ project, type, content }) {
     const user = await getUser()
+    if (!user) { window.location.href = 'login.html'; return null }
     const { data, error } = await sb.from('captures')
       .insert({ project, type, content, user_id: user.id })
       .select().single()
-    if (error) console.error('Captures.add:', error)
+    if (error) { console.error('Captures.add:', error); return null }
     return data
   },
 
