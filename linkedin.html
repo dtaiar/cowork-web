@@ -104,18 +104,15 @@
       position: fixed; bottom: 0; left: 50%;
       transform: translateX(-50%);
       width: 100%; max-width: 430px;
-      padding: 8px 16px max(calc(var(--safe-b) + 12px), 28px);
+      padding: 8px 8px env(safe-area-inset-bottom, 0px);
       z-index: 100;
-      background: var(--bg);
-    }
-    .nav-bar {
-      background: rgba(16,16,16,0.86);
+      background: rgba(14,14,14,0.95);
       backdrop-filter: blur(28px) saturate(1.6);
       -webkit-backdrop-filter: blur(28px) saturate(1.6);
-      border: 1px solid var(--b2);
-      border-radius: 22px;
+      border-top: 1px solid var(--b2);
+    }
+    .nav-bar {
       display: flex; align-items: stretch;
-      padding: 6px;
       gap: 2px;
     }
     .nav-btn {
