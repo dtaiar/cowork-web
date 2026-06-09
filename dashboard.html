@@ -1219,30 +1219,6 @@
       border-color: var(--accent-hover);
     }
 
-    /* ── LinkedIn tab ── */
-    .li-fp {
-      background: none; border: 1px solid var(--border-light); border-radius: 99px;
-      padding: 3px 10px; font-size: 11px; color: var(--text-muted); cursor: pointer;
-      font-family: inherit;
-    }
-    .li-fp-on, .li-fp:hover { background: var(--bg-secondary); border-color: var(--border-color); color: var(--text-primary); }
-    .li-post {
-      background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px;
-      padding: 10px 12px 10px 14px; display: flex; align-items: center; gap: 10px;
-      position: relative; overflow: hidden; border-left-width: 3px;
-    }
-    .li-post:hover { border-color: var(--border-color); }
-    .li-pid { font-size: 11px; font-weight: 500; color: var(--text-muted); min-width: 32px; flex-shrink: 0; }
-    .li-body { flex: 1; min-width: 0; }
-    .li-title { font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .li-hook { font-size: 11px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .li-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .li-badge { font-size: 10px; padding: 2px 7px; border-radius: 99px; font-weight: 500; }
-    .li-raw { background: var(--bg-secondary); color: var(--text-muted); border: 1px solid var(--border-light); }
-    .li-drafted { background: rgba(24,95,165,.18); color: #64a8e8; border: 1px solid rgba(100,168,232,.25); }
-    .li-posted  { background: rgba(59,109,17,.18);  color: #7bc94a; border: 1px solid rgba(123,201,74,.25); }
-    .li-pill { font-size: 10px; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 600; }
-
     .back-btn-dash {
       width: 34px; height: 34px;
       background: var(--bg-card);
@@ -1275,7 +1251,6 @@
         <button id="memoryTabBtn">Context</button>
         <button id="statusTabBtn">Status</button>
         <button id="glossaryTabBtn">Glossary</button>
-        <button id="linkedinTabBtn">LinkedIn</button>
       </div>
       <div class="view-toggle" id="taskViewToggle">
         <button id="boardViewBtn" class="active">Board</button>
@@ -1347,158 +1322,6 @@
     </div>
   </div>
 
-  <!-- LINKEDIN TAB PANEL -->
-  <div class="tab-panel" id="linkedinPanel">
-    <div style="max-width: 860px; margin: 0 auto; flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px; padding-bottom: 24px;">
-
-      <!-- Header -->
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
-        <div style="display:flex; align-items:center; gap: 8px;">
-          <div style="width:8px; height:8px; border-radius:50%; background:#378ADD; flex-shrink:0;"></div>
-          <span style="font-size:14px; font-weight:600; color:var(--text-primary);">LinkedIn content studio</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:16px;">
-          <span style="font-size:12px; color:var(--text-muted);"><strong style="color:var(--text-primary);">5</strong> in backlog</span>
-          <span style="font-size:12px; color:var(--text-muted);"><strong style="color:var(--text-primary);">4</strong> pillars</span>
-          <span style="font-size:12px; color:var(--text-muted);"><strong style="color:var(--text-primary);">24</strong> sources</span>
-        </div>
-      </div>
-
-      <!-- Pillars -->
-      <div style="font-size:11px; font-weight:500; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Content pillars</div>
-      <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-bottom:20px;">
-        <div style="background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:12px 12px 12px 15px; cursor:pointer; position:relative; overflow:hidden;" onmouseenter="this.style.borderColor='var(--border-color)'" onmouseleave="this.style.borderColor='var(--border-light)'">
-          <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#378ADD;border-radius:3px 0 0 3px;"></div>
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">01</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-primary);line-height:1.3;">UI craft &amp; design systems</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Core · monetization</div>
-        </div>
-        <div style="background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:12px 12px 12px 15px; cursor:pointer; position:relative; overflow:hidden;" onmouseenter="this.style.borderColor='var(--border-color)'" onmouseleave="this.style.borderColor='var(--border-light)'">
-          <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#7F77DD;border-radius:3px 0 0 3px;"></div>
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">02</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-primary);line-height:1.3;">AI in design practice</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Timely · growth</div>
-        </div>
-        <div style="background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:12px 12px 12px 15px; cursor:pointer; position:relative; overflow:hidden;" onmouseenter="this.style.borderColor='var(--border-color)'" onmouseleave="this.style.borderColor='var(--border-light)'">
-          <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#1D9E75;border-radius:3px 0 0 3px;"></div>
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">03</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-primary);line-height:1.3;">Design in complex products</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Differentiator</div>
-        </div>
-        <div style="background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:12px 12px 12px 15px; cursor:pointer; position:relative; overflow:hidden;" onmouseenter="this.style.borderColor='var(--border-color)'" onmouseleave="this.style.borderColor='var(--border-light)'">
-          <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#BA7517;border-radius:3px 0 0 3px;"></div>
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">04</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-primary);line-height:1.3;">Designer career &amp; growth</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Community</div>
-        </div>
-      </div>
-
-      <hr style="border:none; border-top:1px solid var(--border-light); margin: 0 0 16px;">
-
-      <!-- Backlog -->
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-        <div style="font-size:11px; font-weight:500; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Topic backlog</div>
-        <div style="display:flex; gap:4px;" id="liFilters">
-          <button class="li-fp li-fp-on" onclick="liFilter('all',this)">All</button>
-          <button class="li-fp" onclick="liFilter('raw',this)">Raw</button>
-          <button class="li-fp" onclick="liFilter('drafted',this)">Drafted</button>
-          <button class="li-fp" onclick="liFilter('posted',this)">Posted</button>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:20px;" id="liBacklog">
-        <!-- T001 -->
-        <div class="li-post" data-s="raw" style="border-left-color:#378ADD;">
-          <span class="li-pid">T001</span>
-          <div class="li-body">
-            <div class="li-title">The component that doesn't exist in any design system</div>
-            <div class="li-hook">UI patterns every B2B product needs but no public DS ships</div>
-          </div>
-          <div class="li-right">
-            <span class="li-badge li-raw">raw</span>
-            <span class="li-pill" style="background:#378ADD;">UI</span>
-          </div>
-        </div>
-        <!-- T002 -->
-        <div class="li-post" data-s="raw" style="border-left-color:#7F77DD;">
-          <span class="li-pid">T002</span>
-          <div class="li-body">
-            <div class="li-title">I've been using Claude in my design process for 3 months</div>
-            <div class="li-hook">Not AI hype — what actually changed, and what's still broken</div>
-          </div>
-          <div class="li-right">
-            <span class="li-badge li-raw">raw</span>
-            <span class="li-pill" style="background:#7F77DD;">AI</span>
-          </div>
-        </div>
-        <!-- T003 -->
-        <div class="li-post" data-s="raw" style="border-left-color:#1D9E75;">
-          <span class="li-pid">T003</span>
-          <div class="li-body">
-            <div class="li-title">Designing for users who know more than you</div>
-            <div class="li-hook">What changes when the user is the domain expert, not you</div>
-          </div>
-          <div class="li-right">
-            <span class="li-badge li-raw">raw</span>
-            <span class="li-pill" style="background:#1D9E75;">B2B</span>
-          </div>
-        </div>
-        <!-- T004 -->
-        <div class="li-post" data-s="raw" style="border-left-color:#378ADD;">
-          <span class="li-pid">T004</span>
-          <div class="li-body">
-            <div class="li-title">What I look for when auditing a design system I didn't build</div>
-            <div class="li-hook">Every undocumented exception tells you something about the team</div>
-          </div>
-          <div class="li-right">
-            <span class="li-badge li-raw">raw</span>
-            <span class="li-pill" style="background:#378ADD;">UI</span>
-          </div>
-        </div>
-        <!-- T005 -->
-        <div class="li-post" data-s="raw" style="border-left-color:#BA7517;">
-          <span class="li-pid">T005</span>
-          <div class="li-body">
-            <div class="li-title">The design decision I've changed my mind about</div>
-            <div class="li-hook">Something specific I used to believe and don't anymore</div>
-          </div>
-          <div class="li-right">
-            <span class="li-badge li-raw">raw</span>
-            <span class="li-pill" style="background:#BA7517;">Career</span>
-          </div>
-        </div>
-      </div>
-
-      <hr style="border:none; border-top:1px solid var(--border-light); margin: 0 0 16px;">
-
-      <!-- Quick actions -->
-      <div style="font-size:11px; font-weight:500; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Quick actions</div>
-      <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px;">
-        <div style="background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:12px; cursor:pointer;" onmouseenter="this.style.borderColor='var(--border-color)'" onmouseleave="this.style.borderColor='var(--border-light)'">
-          <div style="font-size:16px; margin-bottom:6px;">💡</div>
-          <div style="font-size:12px; font-weight:600; color:var(--text-primary);">New topic</div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Develop a post idea</div>
-        </div>
-        <div style="background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:12px; cursor:pointer;" onmouseenter="this.style.borderColor='var(--border-color)'" onmouseleave="this.style.borderColor='var(--border-light)'">
-          <div style="font-size:16px; margin-bottom:6px;">🔍</div>
-          <div style="font-size:12px; font-weight:600; color:var(--text-primary);">Research</div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Web search → post angles</div>
-        </div>
-        <div style="background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:12px; cursor:pointer;" onmouseenter="this.style.borderColor='var(--border-color)'" onmouseleave="this.style.borderColor='var(--border-light)'">
-          <div style="font-size:16px; margin-bottom:6px;">✓</div>
-          <div style="font-size:12px; font-weight:600; color:var(--text-primary);">Log activity</div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Track what you did</div>
-        </div>
-        <div style="background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:12px; cursor:pointer;" onmouseenter="this.style.borderColor='var(--border-color)'" onmouseleave="this.style.borderColor='var(--border-light)'">
-          <div style="font-size:16px; margin-bottom:6px;">📡</div>
-          <div style="font-size:12px; font-weight:600; color:var(--text-primary);">From sources</div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Ideas from your feed</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
   <!-- MODAL (shared for memory) -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
@@ -1534,12 +1357,10 @@
     const memoryTabBtn = document.getElementById('memoryTabBtn');
     const statusTabBtn = document.getElementById('statusTabBtn');
     const glossaryTabBtn = document.getElementById('glossaryTabBtn');
-    const linkedinTabBtn = document.getElementById('linkedinTabBtn');
     const tasksPanel = document.getElementById('tasksPanel');
     const memoryPanel = document.getElementById('memoryPanel');
     const statusPanel = document.getElementById('statusPanel');
     const glossaryPanel = document.getElementById('glossaryPanel');
-    const linkedinPanel = document.getElementById('linkedinPanel');
     const taskViewToggle = document.getElementById('taskViewToggle');
     const openTaskBtn = document.getElementById('openTaskBtn');
     const openMemoryBtn = document.getElementById('openMemoryBtn');
@@ -1553,13 +1374,11 @@
       memoryTabBtn.classList.toggle('active', tab === 'memory');
       statusTabBtn.classList.toggle('active', tab === 'status');
       glossaryTabBtn.classList.toggle('active', tab === 'glossary');
-      linkedinTabBtn.classList.toggle('active', tab === 'linkedin');
 
       tasksPanel.classList.toggle('active', tab === 'tasks');
       memoryPanel.classList.toggle('active', tab === 'memory');
       statusPanel.classList.toggle('active', tab === 'status');
       glossaryPanel.classList.toggle('active', tab === 'glossary');
-      linkedinPanel.classList.toggle('active', tab === 'linkedin');
 
       // Show/hide view toggle for tasks only
       taskViewToggle.style.display = tab === 'tasks' ? 'flex' : 'none';
@@ -1595,16 +1414,6 @@
     memoryTabBtn.addEventListener('click', () => switchMainTab('memory'));
     statusTabBtn.addEventListener('click', () => switchMainTab('status'));
     glossaryTabBtn.addEventListener('click', () => switchMainTab('glossary'));
-    linkedinTabBtn.addEventListener('click', () => switchMainTab('linkedin'));
-
-    // LinkedIn backlog filter
-    function liFilter(s, btn) {
-      document.querySelectorAll('.li-fp').forEach(b => { b.classList.remove('li-fp-on'); });
-      btn.classList.add('li-fp-on');
-      document.querySelectorAll('.li-post').forEach(p => {
-        p.style.display = (s === 'all' || p.dataset.s === s) ? 'flex' : 'none';
-      });
-    }
 
     // ============================================================
     // ===== TASKS FUNCTIONALITY =====
