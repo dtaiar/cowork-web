@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Context">
+  <title>Context · CoWork</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='28' height='28' x='2' y='2' rx='6' fill='%23141414' stroke='%234A8EF7' stroke-width='2'/%3E%3Cpath d='M9 10h14M9 16h10M9 22h7' stroke='%234A8EF7' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #090909; --s1:  #141414; --s2:  #1e1e1e; --s3:  #252525;
+      --t1:  #efefef; --t2:  #aaaaaa; --t3:  #666666;
+      --b0:  rgba(255,255,255,0.06); --b1:  rgba(255,255,255,0.09); --b2:  rgba(255,255,255,0.13);
+      --accent: #4A8EF7; --accent-hover: #6aa3f9;
+      --ga: linear-gradient(135deg,#4A8EF7 0%,#9B7DF7 100%);
+      --a1: #4A8EF7; --a2: #9B7DF7;
+      --green: #3DC87A; --amber: #F0A928; --red: #E05555; --violet: #9B7DF7;
+      --shadow: rgba(0,0,0,0.35); --shadow-hover: rgba(0,0,0,0.55);
+      --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      background: var(--bg); color: var(--t1);
+      height: 100vh; padding: 20px 24px;
+      line-height: 1.5; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--b1); flex-shrink: 0;
+    }
+
+    h1 {
+      font-size: 1.5rem; font-weight: 700; letter-spacing: -0.04em;
+      background: var(--ga); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 0; }
+
+    .view-toggle {
+      display: flex; gap: 4px; background: var(--s1);
+      padding: 4px; border-radius: 8px; margin-left: 16px;
+    }
+    .view-toggle button {
+      background: transparent; border: none; padding: 6px 14px;
+      font-size: 13px; color: var(--t3); border-radius: 6px; cursor: pointer; font-family: inherit;
+    }
+    .view-toggle button:hover { color: var(--t1); }
+    .view-toggle button.active { background: var(--s2); color: var(--t1); box-shadow: 0 1px 3px var(--shadow); }
+
+    button {
+      background: var(--s2); color: var(--t1); border: 1px solid var(--b1);
+      padding: 10px 18px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; font-weight: 500; font-family: inherit; transition: all 0.15s ease;
+    }
+    button:hover { background: var(--s1); border-color: var(--t3); }
+    button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+    button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .buttons { display: flex; gap: 12px; }
+
+    /* Tab panels */
+    .tab-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .tab-panel.active { display: flex; }
+
+    /* ===== MEMORY STYLES ===== */
+    .memory-tabs {
+      display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap;
+      background: var(--s1); padding: 4px; border-radius: 8px; flex-shrink: 0;
+    }
+    .memory-tab {
+      background: transparent; color: var(--t3); padding: 8px 16px;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 13px; font-weight: 500; transition: all 0.15s ease; text-transform: capitalize;
+    }
+    .memory-tab:hover { color: var(--t1); }
+    .memory-tab.active { color: var(--t1); background: var(--s2); box-shadow: 0 1px 3px var(--shadow); }
+    .memory-tab .count {
+      background: var(--s1); padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; margin-left: 6px; color: var(--t3);
+    }
+    .memory-tab.active .count { background: var(--b0); }
+
+    .memory-content-area { flex: 1; overflow-y: auto; min-height: 0; }
+    .memory-content-area::-webkit-scrollbar { width: 6px; }
+    .memory-content-area::-webkit-scrollbar-track { background: transparent; }
+    .memory-content-area::-webkit-scrollbar-thumb { background: var(--b1); border-radius: 3px; }
+    .memory-content-area::-webkit-scrollbar-thumb:hover { background: var(--t3); }
+
+    .memory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+    .memory-flat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .memory-flat-table th {
+      text-align: left; padding: 10px 16px; font-weight: 500; color: var(--t3);
+      border-bottom: 1px solid var(--b1); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .memory-flat-table td { padding: 9px 16px; border-bottom: 1px solid var(--b0); color: var(--t1); line-height: 1.4; }
+    .memory-flat-table td:first-child { color: var(--t3); font-weight: 500; white-space: nowrap; width: 120px; }
+    .memory-flat-table tr:last-child td { border-bottom: none; }
+    .memory-flat-table tr:hover td { background: var(--s1); }
+
+    .memory-card {
+      background: var(--s2); border: 1px solid var(--b0); border-radius: 10px;
+      padding: 16px; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 1px 3px var(--shadow);
+    }
+    .memory-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px var(--shadow-hover); }
+    .memory-card-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; color: var(--t1); }
+    .memory-card-preview { font-size: 13px; color: var(--t2); line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+    .memory-card-fields { margin-top: 10px; font-size: 12px; }
+    .memory-card-field { display: flex; gap: 8px; margin-bottom: 4px; }
+    .memory-card-field-label { color: var(--t3); min-width: 80px; }
+    .memory-card-field-value { color: var(--t2); }
+
+    .file-card {
+      background: var(--s2); border: 1px solid var(--b0); border-radius: 10px;
+      margin-bottom: 16px; box-shadow: 0 1px 3px var(--shadow);
+    }
+    .file-card-header {
+      padding: 16px; border-bottom: 1px solid var(--b0);
+      display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+    }
+    .file-card-header:hover { background: var(--s1); }
+    .file-card-title { font-size: 14px; font-weight: 600; color: var(--t1); }
+    .file-card-content {
+      padding: 16px; font-size: 13px; line-height: 1.6; white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      overflow-y: auto; display: none; color: var(--t2); max-height: 400px;
+    }
+    .file-card-content.expanded { display: block; }
+    .file-card-content::-webkit-scrollbar { width: 6px; }
+    .file-card-content::-webkit-scrollbar-track { background: transparent; }
+    .file-card-content::-webkit-scrollbar-thumb { background: var(--b1); border-radius: 3px; }
+
+    .stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat {
+      background: var(--s2); border: 1px solid var(--b0); border-radius: 10px;
+      padding: 16px 24px; min-width: 100px; box-shadow: 0 1px 3px var(--shadow);
+    }
+    .stat-value { font-size: 28px; font-weight: 600; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--t3); text-transform: capitalize; margin-top: 4px; }
+
+    .search-box {
+      background: var(--s2); border: 1px solid var(--b1); border-radius: 8px;
+      padding: 10px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    }
+    .search-box input { flex: 1; background: transparent; border: none; color: var(--t1); font-size: 14px; font-family: inherit; outline: none; }
+    .search-box input::placeholder { color: var(--t3); }
+
+    .add-btn {
+      background: transparent; border: 2px dashed var(--b1); color: var(--t3);
+      padding: 40px; border-radius: 10px; cursor: pointer; transition: all 0.15s ease;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 500;
+    }
+    .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .markdown-content { line-height: 1.6; color: var(--t2); }
+    .markdown-content h1 { font-size: 1.4em; margin: 16px 0 8px; color: var(--t1); }
+    .markdown-content h2 { font-size: 1.2em; margin: 14px 0 6px; color: var(--t1); }
+    .markdown-content h3 { font-size: 1.1em; margin: 12px 0 4px; color: var(--t2); }
+    .markdown-content p { margin: 8px 0; }
+    .markdown-content ul, .markdown-content ol { margin: 8px 0 8px 20px; }
+    .markdown-content li { margin: 4px 0; }
+    .markdown-content code { background: var(--s1); padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: var(--t1); }
+    .markdown-content pre { background: var(--s1); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; border: 1px solid var(--b0); }
+    .markdown-content table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+    .markdown-content th, .markdown-content td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--b0); }
+    .markdown-content th { background: var(--s1); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--t2); }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.visible { display: flex; }
+    .modal { background: var(--s2); border-radius: 12px; width: 90%; max-width: 800px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--b1); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 18px; font-weight: 600; color: var(--t1); }
+    .modal-close { background: transparent; border: none; color: var(--t3); font-size: 24px; cursor: pointer; padding: 0; line-height: 1; }
+    .modal-close:hover { color: var(--t1); }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .modal-body::-webkit-scrollbar { width: 6px; }
+    .modal-body::-webkit-scrollbar-track { background: transparent; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--b1); border-radius: 3px; }
+    .modal-footer { padding: 16px 20px; border-top: 1px solid var(--b1); display: flex; justify-content: flex-end; gap: 10px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--t2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .form-group textarea { width: 100%; background: var(--s1); border: 1px solid var(--b1); border-radius: 8px; padding: 12px; color: var(--t1); font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; line-height: 1.5; min-height: 300px; resize: vertical; }
+    .form-group textarea:focus { outline: none; border-color: var(--accent); }
+
+    /* ===== STATUS STYLES ===== */
+    .status-panel-scroll { overflow-y: auto; flex: 1; padding-right: 4px; }
+    .status-panel-scroll::-webkit-scrollbar { width: 6px; }
+    .status-panel-scroll::-webkit-scrollbar-track { background: transparent; }
+    .status-panel-scroll::-webkit-scrollbar-thumb { background: var(--b1); border-radius: 3px; }
+
+    /* ===== GLOSSARY STYLES ===== */
+    .glossary-filter {
+      background: var(--s1); border: 1px solid var(--b1); color: var(--t3);
+      padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s ease;
+    }
+    .glossary-filter:hover { color: var(--t1); border-color: var(--t3); }
+    .glossary-filter.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .glossary-filter.active:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+    .empty-state { text-align: center; padding: 80px 40px; color: var(--t3); }
+    .empty-state p { font-size: 18px; font-weight: 600; color: var(--t1); margin-bottom: 24px; }
+
+    .status-bar {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--t1); color: var(--bg); padding: 12px 24px; border-radius: 10px;
+      font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 200;
+    }
+    .status-bar.visible { opacity: 1; }
+
+    .back-btn-dash {
+      width: 32px; height: 32px; background: var(--s2); border: 1px solid var(--b1); border-radius: 10px;
+      display: inline-flex; align-items: center; justify-content: center;
+      text-decoration: none; color: var(--t3); margin-right: 10px; flex-shrink: 0; transition: all 0.15s;
+    }
+    .back-btn-dash:hover { border-color: rgba(255,255,255,0.2); color: var(--t1); }
+    .back-btn-dash svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    .file-path { font-size: 13px; color: var(--t3); margin-top: 2px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <a class="back-btn-dash" href="index.html">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </a>
+      <div>
+        <h1>Context</h1>
+        <div id="filePath" class="file-path"></div>
+      </div>
+      <div class="view-toggle" id="mainTabToggle">
+        <button id="memoryTabBtn" class="active">Memory</button>
+        <button id="statusTabBtn">Status</button>
+        <button id="glossaryTabBtn">Glossary</button>
+      </div>
+    </div>
+    <div class="buttons">
+      <button id="restoreBtn" style="display:none;">↩ Restore workspace</button>
+      <button id="openMemoryBtn" style="display:inline-flex;">Open Folder</button>
+      <button id="openStatusBtn" style="display:none;">Load Briefs</button>
+    </div>
+  </header>
+
+  <!-- MEMORY PANEL -->
+  <div class="tab-panel active" id="memoryPanel">
+    <div id="memoryEmptyState" class="empty-state">
+      <p>Select your CoWorkPilot folder</p>
+      <button id="openMemoryBtnLarge">Select Folder</button>
+    </div>
+    <div id="memoryMainContent" style="display:none;flex-direction:column;min-height:0;flex:1;">
+      <div class="memory-tabs" id="memoryTabsContainer"></div>
+      <div class="memory-content-area">
+        <div id="memoryContentContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS PANEL -->
+  <div class="tab-panel" id="statusPanel">
+    <div id="statusEmptyState" class="empty-state">
+      <p>Loading status…</p>
+    </div>
+    <div id="statusMainContent" style="display:none;flex-direction:column;min-height:0;flex:1;">
+      <div class="status-panel-scroll">
+        <div class="stats" id="statusQuickStats"></div>
+        <div id="statusDomains"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOSSARY PANEL -->
+  <div class="tab-panel" id="glossaryPanel">
+    <div style="max-width:800px;margin:0 auto;flex:1;overflow-y:auto;min-height:0;padding-right:4px;">
+      <div class="search-box" style="margin-bottom:16px;">
+        <span style="color:var(--t3);">&#128269;</span>
+        <input type="text" id="glossarySearch" placeholder="Search terms and meanings..." oninput="filterGlossary()">
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;" id="glossaryFilters">
+        <button class="glossary-filter active" data-cat="All" onclick="setGlossaryFilter('All')">All</button>
+        <button class="glossary-filter" data-cat="AXPO Terms" onclick="setGlossaryFilter('AXPO Terms')">AXPO Terms</button>
+        <button class="glossary-filter" data-cat="Notation" onclick="setGlossaryFilter('Notation')">Notation</button>
+        <button class="glossary-filter" data-cat="Process" onclick="setGlossaryFilter('Process')">Process</button>
+      </div>
+      <div id="glossaryTable"></div>
+    </div>
+  </div>
+
+  <!-- MODAL (memory editing) -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Edit</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button id="modalCancel">Cancel</button>
+        <button id="modalSave" class="primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="status"></div>
+
+  <script>
+    // ===== SHARED =====
+    let activeTab = 'memory'; // 'memory' | 'status' | 'glossary'
+    const statusEl = document.getElementById('status');
+    const filePathEl = document.getElementById('filePath');
+
+    function showStatus(msg) {
+      statusEl.textContent = msg; statusEl.classList.add('visible');
+      setTimeout(() => statusEl.classList.remove('visible'), 2000);
+    }
+
+    // ===== TAB SWITCHING =====
+    const memoryTabBtn = document.getElementById('memoryTabBtn');
+    const statusTabBtn = document.getElementById('statusTabBtn');
+    const glossaryTabBtn = document.getElementById('glossaryTabBtn');
+    const memoryPanel = document.getElementById('memoryPanel');
+    const statusPanel = document.getElementById('statusPanel');
+    const glossaryPanel = document.getElementById('glossaryPanel');
+    const openMemoryBtn = document.getElementById('openMemoryBtn');
+    const openStatusBtn = document.getElementById('openStatusBtn');
+
+    function switchTab(tab) {
+      activeTab = tab;
+      memoryTabBtn.classList.toggle('active', tab === 'memory');
+      statusTabBtn.classList.toggle('active', tab === 'status');
+      glossaryTabBtn.classList.toggle('active', tab === 'glossary');
+      memoryPanel.classList.toggle('active', tab === 'memory');
+      statusPanel.classList.toggle('active', tab === 'status');
+      glossaryPanel.classList.toggle('active', tab === 'glossary');
+
+      openMemoryBtn.style.display = tab === 'memory' ? 'inline-flex' : 'none';
+      openStatusBtn.style.display = tab === 'status' ? 'inline-flex' : 'none';
+
+      filePathEl.textContent = tab === 'memory' ? (memoryDirHandle ? memoryDirHandle.name : '')
+        : tab === 'status' ? (statusDirHandle ? statusDirHandle.name : '') : '';
+
+      if (tab === 'status') renderStatusData();
+      if (tab === 'glossary') renderGlossary();
+    }
+
+    memoryTabBtn.addEventListener('click', () => switchTab('memory'));
+    statusTabBtn.addEventListener('click', () => switchTab('status'));
+    glossaryTabBtn.addEventListener('click', () => switchTab('glossary'));
+
+    // ============================================================
+    // ===== MEMORY FUNCTIONALITY =====
+    // ============================================================
+
+    let memoryDirHandle = null;
+    let memoryData = { claudeMd: null, memoryFiles: [], memoryDirs: {} };
+
+    const memoryEmptyState = document.getElementById('memoryEmptyState');
+    const memoryMainContent = document.getElementById('memoryMainContent');
+    const memoryTabsContainer = document.getElementById('memoryTabsContainer');
+    const memoryContentContainer = document.getElementById('memoryContentContainer');
+    const modalOverlay = document.getElementById('modalOverlay');
+
+    function escapeHtml(text) {
+      const div = document.createElement('div'); div.textContent = text || ''; return div.innerHTML;
+    }
+
+    function parseMemoryMarkdown(content) {
+      const parsed = { title: '', fields: {}, sections: {}, tables: [], rawContent: content };
+      const lines = content.split('\n');
+      let currentSection = '_intro';
+      parsed.sections[currentSection] = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.match(/^# /)) { parsed.title = line.replace(/^# /, '').trim(); continue; }
+        if (line.match(/^## /)) { currentSection = line.replace(/^## /, '').trim(); parsed.sections[currentSection] = []; continue; }
+        const kvMatch = line.match(/^\*\*(.+?):\*\*\s*(.*)$/);
+        if (kvMatch) { parsed.fields[kvMatch[1]] = kvMatch[2]; continue; }
+        parsed.sections[currentSection].push(line);
+      }
+      for (const key in parsed.sections) parsed.sections[key] = parsed.sections[key].join('\n').trim();
+      const tableRegex = /\|(.+)\|\n\|[-| ]+\|\n((?:\|.+\|\n?)+)/g;
+      let match;
+      while ((match = tableRegex.exec(content)) !== null) {
+        const headers = match[1].split('|').map(h => h.trim()).filter(h => h);
+        const rowLines = match[2].trim().split('\n');
+        const rows = rowLines.map(row => row.split('|').map(c => c.trim()).filter(c => c));
+        parsed.tables.push({ headers, rows });
+      }
+      return parsed;
+    }
+
+    function getPreview(content, maxLength = 150) {
+      let preview = content.replace(/^#+ .+$/gm, '').replace(/\*\*(.+?):\*\*.*/g, '').replace(/\|.+\|/g, '').replace(/[-=]{3,}/g, '').trim().substring(0, maxLength);
+      if (content.length > maxLength) preview += '...';
+      return preview;
+    }
+
+    function getDisplayName(filename) {
+      return filename.replace('.md', '').split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    async function loadMemoryDirectory() {
+      try {
+        memoryDirHandle = await window.showDirectoryPicker();
+        memoryData = { claudeMd: null, memoryFiles: [], memoryDirs: {} };
+        try { const cf = await memoryDirHandle.getFileHandle('CLAUDE.md'); const file = await cf.getFile(); memoryData.claudeMd = { content: await file.text(), fileHandle: cf }; } catch (e) {}
+        try {
+          const memDir = await memoryDirHandle.getDirectoryHandle('memory');
+          for await (const entry of memDir.values()) {
+            if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+              const file = await entry.getFile();
+              memoryData.memoryFiles.push({ name: entry.name, content: await file.text(), fileHandle: entry });
+            } else if (entry.kind === 'directory') {
+              memoryData.memoryDirs[entry.name] = [];
+              for await (const subEntry of entry.values()) {
+                if (subEntry.kind === 'file' && subEntry.name.endsWith('.md')) {
+                  const file = await subEntry.getFile(); const content = await file.text();
+                  memoryData.memoryDirs[entry.name].push({ name: subEntry.name, content, fileHandle: subEntry, dirHandle: entry, parsed: parseMemoryMarkdown(content) });
+                }
+              }
+            }
+          }
+        } catch (e) {}
+        renderMemory();
+        memoryEmptyState.style.display = 'none'; memoryMainContent.style.display = 'flex';
+        filePathEl.textContent = memoryDirHandle.name;
+        showStatus('Loaded memory from ' + memoryDirHandle.name);
+        if (typeof _saveHandle === 'function') await _saveHandle('contextMemoryDir', memoryDirHandle);
+      } catch (e) { if (e.name !== 'AbortError') showStatus('Error: ' + e.message); }
+    }
+
+    function renderMemory() { renderMemoryTabs(); renderMemoryContent(); }
+
+    function renderMemoryTabs() {
+      let html = '';
+      if (memoryData.claudeMd) html += `<button class="memory-tab active" data-tab="overview">Overview</button>`;
+      for (const file of memoryData.memoryFiles) {
+        const name = file.name.replace('.md', '');
+        html += `<button class="memory-tab${!memoryData.claudeMd && memoryData.memoryFiles[0] === file ? ' active' : ''}" data-tab="file-${name}">${name}</button>`;
+      }
+      for (const dirName of Object.keys(memoryData.memoryDirs).sort()) {
+        const files = memoryData.memoryDirs[dirName];
+        let count;
+        if (dirName === 'context') {
+          count = 0;
+          for (const file of files) {
+            const p = file.parsed;
+            count += Object.keys(p.fields).length;
+            for (const table of p.tables) count += table.rows.length;
+            for (const [sName, sContent] of Object.entries(p.sections)) { if (sContent && sName !== '_intro') count += sContent.split('\n').filter(l => l.trim() && !l.trim().startsWith('|')).length; }
+          }
+        } else { count = files.length; }
+        html += `<button class="memory-tab" data-tab="dir-${dirName}">${dirName} <span class="count">${count}</span></button>`;
+      }
+      memoryTabsContainer.innerHTML = html;
+      memoryTabsContainer.querySelectorAll('.memory-tab').forEach(tab => {
+        tab.addEventListener('click', () => { memoryTabsContainer.querySelectorAll('.memory-tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); renderMemoryContent(); });
+      });
+    }
+
+    function renderMemoryContent() {
+      const activeTab = memoryTabsContainer.querySelector('.memory-tab.active');
+      if (!activeTab) return;
+      const tabId = activeTab.dataset.tab;
+      if (tabId === 'overview') renderMemoryOverview();
+      else if (tabId.startsWith('file-')) renderMemoryFile(tabId.replace('file-', '') + '.md');
+      else if (tabId.startsWith('dir-')) renderMemoryDirectory(tabId.replace('dir-', ''));
+    }
+
+    function renderMemoryOverview() {
+      if (!memoryData.claudeMd) return;
+      let statsHtml = '<div class="stats">';
+      for (const [dirName, files] of Object.entries(memoryData.memoryDirs)) {
+        let count;
+        if (dirName === 'context') {
+          count = 0;
+          for (const file of files) { const p = file.parsed; count += Object.keys(p.fields).length; for (const table of p.tables) count += table.rows.length; for (const [sName, sContent] of Object.entries(p.sections)) { if (sContent && sName !== '_intro') count += sContent.split('\n').filter(l => l.trim() && !l.trim().startsWith('|')).length; } }
+        } else count = files.length;
+        statsHtml += `<div class="stat"><div class="stat-value">${count}</div><div class="stat-label">${dirName}</div></div>`;
+      }
+      statsHtml += '</div>';
+      const claudeContent = renderMarkdownToHtml(memoryData.claudeMd.content);
+      memoryContentContainer.innerHTML = `${statsHtml}<div class="file-card"><div class="file-card-header" onclick="this.nextElementSibling.classList.toggle('expanded');this.querySelector('.toggle').textContent=this.nextElementSibling.classList.contains('expanded')?'−':'+'"><span class="file-card-title">CLAUDE.md</span><span class="toggle" style="color:var(--t3);">&minus;</span></div><div class="file-card-content expanded markdown-content">${claudeContent}</div></div><button onclick="openEditModal('CLAUDE.md','claudeMd')" style="margin-top:10px;">Edit CLAUDE.md</button>`;
+    }
+
+    function renderMemoryFile(fileName) {
+      const file = memoryData.memoryFiles.find(f => f.name === fileName);
+      if (!file) return;
+      memoryContentContainer.innerHTML = `<div class="file-card"><div class="file-card-header"><span class="file-card-title">${fileName}</span></div><div class="file-card-content expanded markdown-content">${renderMarkdownToHtml(file.content)}</div></div><button onclick="openEditModal('${fileName}','memoryFile')" style="margin-top:10px;">Edit ${fileName}</button>`;
+    }
+
+    function renderMemoryDirectory(dirName) {
+      const files = memoryData.memoryDirs[dirName] || [];
+      if (dirName === 'context') { renderMemoryDirectoryFlat(dirName, files); return; }
+      let html = `<div class="search-box"><span style="color:var(--t3);">&#128269;</span><input type="text" placeholder="Search ${dirName}..." id="dirSearch" oninput="filterMemoryDirectory('${dirName}',this.value)"></div><div class="memory-grid" id="dirGrid">`;
+      for (const file of files) {
+        const p = file.parsed; const title = p.title || getDisplayName(file.name);
+        let fieldsHtml = '';
+        const fieldEntries = Object.entries(p.fields).slice(0, 3);
+        if (fieldEntries.length > 0) { fieldsHtml = '<div class="memory-card-fields">'; for (const [key, value] of fieldEntries) fieldsHtml += `<div class="memory-card-field"><span class="memory-card-field-label">${escapeHtml(key)}</span><span class="memory-card-field-value">${escapeHtml(value)}</span></div>`; fieldsHtml += '</div>'; }
+        let preview = '';
+        for (const [sectionName, sectionContent] of Object.entries(p.sections)) { if (sectionContent && sectionName !== '_intro') { preview = getPreview(sectionContent, 100); break; } }
+        if (!preview) preview = getPreview(p.rawContent, 100);
+        html += `<div class="memory-card" onclick="openFileModal('${dirName}','${file.name}')" data-search="${escapeHtml((title+' '+JSON.stringify(p.fields)+' '+p.rawContent).toLowerCase())}"><div class="memory-card-title">${escapeHtml(title)}</div>${fieldsHtml}<div class="memory-card-preview">${escapeHtml(preview)}</div></div>`;
+      }
+      html += `<div class="add-btn" onclick="openNewFileModal('${dirName}')">+ Add to ${dirName}</div></div>`;
+      memoryContentContainer.innerHTML = html;
+    }
+
+    function renderMemoryDirectoryFlat(dirName, files) {
+      let html = `<div class="search-box"><span style="color:var(--t3);">&#128269;</span><input type="text" placeholder="Search ${dirName}..." id="dirSearch" oninput="filterMemoryDirectory('${dirName}',this.value)"></div><div id="dirGrid">`;
+      for (const file of files) {
+        const p = file.parsed;
+        const fieldEntries = Object.entries(p.fields);
+        if (fieldEntries.length > 0) { html += `<div class="file-card" style="margin-bottom:16px;"><table class="memory-flat-table"><tbody>`; for (const [key, value] of fieldEntries) html += `<tr data-search="${escapeHtml((key+' '+value).toLowerCase())}"><td>${escapeHtml(key)}</td><td>${escapeHtml(value)}</td></tr>`; html += `</tbody></table></div>`; }
+        for (const table of p.tables) { html += `<div class="file-card" style="margin-bottom:16px;"><table class="memory-flat-table"><thead><tr>`; for (const h of table.headers) html += `<th>${escapeHtml(h)}</th>`; html += `</tr></thead><tbody>`; for (const row of table.rows) { html += `<tr data-search="${escapeHtml(row.join(' ').toLowerCase())}">`;  for (const cell of row) html += `<td>${escapeHtml(cell)}</td>`; html += `</tr>`; } html += `</tbody></table></div>`; }
+        for (const [sectionName, sectionContent] of Object.entries(p.sections)) {
+          if (!sectionContent || sectionName === '_intro') continue;
+          const lines = sectionContent.split('\n').filter(l => l.trim() && !l.trim().startsWith('|'));
+          if (lines.length === 0) continue;
+          html += `<div class="file-card" style="margin-bottom:16px;"><table class="memory-flat-table"><thead><tr><th colspan="2">${escapeHtml(sectionName)}</th></tr></thead><tbody>`;
+          for (const line of lines) { const cleanLine = line.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '$1').trim(); if (!cleanLine) continue; html += `<tr data-search="${escapeHtml((sectionName+' '+cleanLine).toLowerCase())}"><td colspan="2">${escapeHtml(cleanLine)}</td></tr>`; }
+          html += `</tbody></table></div>`;
+        }
+      }
+      html += `</div>`; memoryContentContainer.innerHTML = html;
+    }
+
+    function filterMemoryDirectory(dirName, searchTerm) {
+      const grid = document.getElementById('dirGrid'); if (!grid) return;
+      const items = grid.querySelectorAll('.memory-card, tr[data-search]'); const search = searchTerm.toLowerCase();
+      items.forEach(item => { const sd = item.dataset.search || ''; item.style.display = (!search || sd.includes(search)) ? '' : 'none'; });
+    }
+
+    function renderMarkdownToHtml(md) {
+      let html = escapeHtml(md);
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      html = html.replace(/```[\s\S]*?```/g, match => { const code = match.replace(/```\w*\n?/g, ''); return '<pre><code>' + code + '</code></pre>'; });
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/(\|.+\|\n\|[-| ]+\|\n(?:\|.+\|\n?)+)/g, match => {
+        const lines = match.trim().split('\n'); const headers = lines[0].split('|').filter(c => c.trim()); const rows = lines.slice(2).map(row => row.split('|').filter(c => c.trim()));
+        let table = '<table><thead><tr>'; headers.forEach(h => table += `<th>${h.trim()}</th>`); table += '</tr></thead><tbody>';
+        rows.forEach(row => { table += '<tr>'; row.forEach(cell => table += `<td>${cell.trim()}</td>`); table += '</tr>'; }); table += '</tbody></table>'; return table;
+      });
+      html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+      html = html.replace(/^(?!<[hupol]|<li|<table|<pre)(.+)$/gm, '<p>$1</p>');
+      html = html.replace(/<p><\/p>/g, ''); html = html.replace(/<p>\s*<\/p>/g, '');
+      return html;
+    }
+
+    function openFileModal(dirName, fileName) {
+      const files = memoryData.memoryDirs[dirName]; const file = files.find(f => f.name === fileName); if (!file) return;
+      document.getElementById('modalTitle').textContent = getDisplayName(fileName);
+      document.getElementById('modalBody').innerHTML = `<div class="markdown-content" style="margin-bottom:20px;">${renderMarkdownToHtml(file.content)}</div><div class="form-group"><label>Edit Raw Markdown</label><textarea id="editContent">${escapeHtml(file.content)}</textarea></div>`;
+      modalOverlay.classList.add('visible'); modalOverlay.dataset.type = 'dirFile'; modalOverlay.dataset.dirName = dirName; modalOverlay.dataset.fileName = fileName;
+    }
+
+    function openNewFileModal(dirName) {
+      document.getElementById('modalTitle').textContent = `Add to ${dirName}`;
+      let template = '# New Entry\n\n';
+      const existingFiles = memoryData.memoryDirs[dirName];
+      if (existingFiles && existingFiles.length > 0) {
+        const sample = existingFiles[0].parsed;
+        for (const key of Object.keys(sample.fields)) template += `**${key}:** \n`;
+        template += '\n';
+        for (const section of Object.keys(sample.sections)) { if (section !== '_intro') template += `## ${section}\n\n`; }
+      }
+      document.getElementById('modalBody').innerHTML = `<div class="form-group"><label>Filename (without .md)</label><input type="text" id="newFileName" placeholder="my-new-entry" style="width:100%;background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:10px 12px;color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px;"></div><div class="form-group"><label>Content</label><textarea id="editContent">${escapeHtml(template)}</textarea></div>`;
+      modalOverlay.classList.add('visible'); modalOverlay.dataset.type = 'newDirFile'; modalOverlay.dataset.dirName = dirName;
+    }
+
+    function openEditModal(fileName, type) {
+      let content = '';
+      if (type === 'claudeMd') content = memoryData.claudeMd.content;
+      else if (type === 'memoryFile') { const file = memoryData.memoryFiles.find(f => f.name === fileName); if (file) content = file.content; }
+      document.getElementById('modalTitle').textContent = `Edit ${fileName}`;
+      document.getElementById('modalBody').innerHTML = `<div class="form-group"><label>Content</label><textarea id="editContent" style="min-height:400px;">${escapeHtml(content)}</textarea></div>`;
+      modalOverlay.classList.add('visible'); modalOverlay.dataset.type = type; modalOverlay.dataset.fileName = fileName;
+    }
+
+    function closeModal() { modalOverlay.classList.remove('visible'); }
+
+    async function saveModal() {
+      const type = modalOverlay.dataset.type; const content = document.getElementById('editContent').value;
+      try {
+        if (type === 'claudeMd') { memoryData.claudeMd.content = content; const w = await memoryData.claudeMd.fileHandle.createWritable(); await w.write(content); await w.close(); showStatus('Saved CLAUDE.md'); }
+        else if (type === 'memoryFile') { const fileName = modalOverlay.dataset.fileName; const file = memoryData.memoryFiles.find(f => f.name === fileName); if (file) { file.content = content; const w = await file.fileHandle.createWritable(); await w.write(content); await w.close(); showStatus('Saved ' + fileName); } }
+        else if (type === 'dirFile') {
+          const dirName = modalOverlay.dataset.dirName; const fileName = modalOverlay.dataset.fileName;
+          const file = memoryData.memoryDirs[dirName].find(f => f.name === fileName);
+          if (file) { file.content = content; file.parsed = parseMemoryMarkdown(content); const w = await file.fileHandle.createWritable(); await w.write(content); await w.close(); showStatus('Saved ' + fileName); }
+        } else if (type === 'newDirFile') {
+          const dirName = modalOverlay.dataset.dirName; let fileName = document.getElementById('newFileName').value.trim();
+          if (!fileName) { showStatus('Please enter a filename'); return; }
+          if (!fileName.endsWith('.md')) fileName += '.md';
+          const memDir = await memoryDirHandle.getDirectoryHandle('memory');
+          const subDir = await memDir.getDirectoryHandle(dirName, { create: true });
+          const fileHandle = await subDir.getFileHandle(fileName, { create: true });
+          const w = await fileHandle.createWritable(); await w.write(content); await w.close();
+          memoryData.memoryDirs[dirName].push({ name: fileName, content, fileHandle, dirHandle: subDir, parsed: parseMemoryMarkdown(content) });
+          showStatus('Created ' + fileName);
+        }
+        closeModal(); renderMemory();
+      } catch (e) { showStatus('Error saving: ' + e.message); }
+    }
+
+    openMemoryBtn.addEventListener('click', loadMemoryDirectory);
+    document.getElementById('openMemoryBtnLarge').addEventListener('click', loadMemoryDirectory);
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('modalSave').addEventListener('click', saveModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    window.openFileModal = openFileModal;
+    window.openNewFileModal = openNewFileModal;
+    window.openEditModal = openEditModal;
+    window.filterMemoryDirectory = filterMemoryDirectory;
+
+    // ============================================================
+    // ===== STATUS FUNCTIONALITY =====
+    // ============================================================
+
+    let statusDirHandle = null;
+
+    const DOMAIN_LABELS = { 'hedging-tool': 'Hedging Tool', 'customer-portal': 'Customer Portal' };
+
+    async function countActiveTasks() {
+      try {
+        const { data } = await sb.from('tasks').select('id').eq('section', 'active').eq('done', false);
+        return data ? data.length : 0;
+      } catch (e) { return null; }
+    }
+
+    async function loadStatusFolder() {
+      try {
+        statusDirHandle = await window.showDirectoryPicker();
+        filePathEl.textContent = statusDirHandle.name;
+        showStatus('Folder opened — loading briefs…');
+        await renderStatusData();
+        if (typeof _saveHandle === 'function') await _saveHandle('contextStatusDir', statusDirHandle);
+      } catch (e) { if (e.name !== 'AbortError') showStatus('Error: ' + e.message); }
+    }
+
+    async function listDir(dirHandle, ...pathParts) {
+      try {
+        let current = dirHandle;
+        for (const part of pathParts) current = await current.getDirectoryHandle(part);
+        const entries = []; for await (const entry of current.values()) entries.push(entry); return entries;
+      } catch (e) { return []; }
+    }
+
+    async function getLatestBrief(domainDirHandle) {
+      try {
+        const outputsDir = await domainDirHandle.getDirectoryHandle('outputs'); const files = [];
+        for await (const entry of outputsDir.values()) { if (entry.kind === 'file' && entry.name.endsWith('.md')) files.push(entry); }
+        if (files.length === 0) return null;
+        files.sort((a, b) => b.name.localeCompare(a.name));
+        const file = await files[0].getFile(); return { name: files[0].name, content: await file.text() };
+      } catch (e) { return null; }
+    }
+
+    async function renderStatusData() {
+      document.getElementById('statusEmptyState').style.display = 'none';
+      document.getElementById('statusMainContent').style.display = 'flex';
+      try {
+        const [blockersRes, questionsRes] = await Promise.all([
+          sb.from('intel').select('*').eq('type', 'blocker').eq('resolved', false),
+          sb.from('intel').select('*').eq('type', 'question').eq('resolved', false)
+        ]);
+        const allBlockers = blockersRes.data || []; const allQuestions = questionsRes.data || [];
+        const PROJECT_KEYS = ['hedging-tool', 'customer-portal'];
+        const domains = PROJECT_KEYS.map(proj => ({ name: proj, blockers: allBlockers.filter(b => b.project === proj), questions: allQuestions.filter(q => q.project === proj), brief: null }));
+
+        if (statusDirHandle) {
+          const axpoEntries = await listDir(statusDirHandle, 'axpo');
+          for (const entry of axpoEntries) {
+            if (entry.kind !== 'directory') continue;
+            const domainDir = await (await statusDirHandle.getDirectoryHandle('axpo')).getDirectoryHandle(entry.name);
+            const brief = await getLatestBrief(domainDir);
+            const domain = domains.find(d => d.name === entry.name);
+            if (domain) domain.brief = brief;
+          }
+        }
+
+        const activeTasks = await countActiveTasks();
+        const statsEl = document.getElementById('statusQuickStats');
+        statsEl.innerHTML = [
+          activeTasks !== null ? `<div class="stat"><div class="stat-value">${activeTasks}</div><div class="stat-label">Active Tasks</div></div>` : '',
+          `<div class="stat"><div class="stat-value">${allBlockers.length}</div><div class="stat-label">Blockers</div></div>`,
+          `<div class="stat"><div class="stat-value">${allQuestions.length}</div><div class="stat-label">Open Questions</div></div>`,
+          `<div class="stat"><div class="stat-value">${PROJECT_KEYS.length}</div><div class="stat-label">Domains</div></div>`,
+        ].join('');
+
+        document.getElementById('statusDomains').innerHTML = domains.map((d, i) => renderDomainCard(d, i)).join('');
+        showStatus('Status loaded');
+      } catch (e) { console.error('renderStatusData:', e); showStatus('Error loading status'); }
+    }
+
+    function intelContent(row) {
+      const raw = row.content; if (!raw) return '';
+      if (typeof raw === 'string') return raw;
+      if (typeof raw === 'object') return raw.description || raw.text || JSON.stringify(raw);
+      return String(raw);
+    }
+
+    function renderDomainCard(domain, idx) {
+      const label = DOMAIN_LABELS[domain.name] || domain.name;
+      const briefDate = domain.brief ? domain.brief.name.replace('brief-', '').replace('.md', '') : null;
+      const blockersHtml = domain.blockers.length > 0
+        ? domain.blockers.map(b => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;"><span style="color:#e5534b;font-size:13px;flex-shrink:0;margin-top:1px;">●</span><span style="font-size:13px;color:var(--t2);">${escapeHtml(intelContent(b))}</span></div>`).join('')
+        : '<p style="font-size:13px;color:var(--t3);">No blockers logged.</p>';
+      const questionsHtml = domain.questions.length > 0
+        ? domain.questions.map(q => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;"><span style="color:var(--accent);font-size:13px;flex-shrink:0;margin-top:1px;">?</span><span style="font-size:13px;color:var(--t2);">${escapeHtml(intelContent(q))}</span></div>`).join('')
+        : '<p style="font-size:13px;color:var(--t3);">No open questions logged.</p>';
+      const briefSection = domain.brief
+        ? `<div class="file-card" style="margin-top:16px;"><div class="file-card-header" onclick="toggleStatusBrief(${idx})"><div class="file-card-title">📄 Latest Brief — ${briefDate}</div><span id="statusBriefChevron${idx}" style="color:var(--t3);font-size:13px;">▼ Expand</span></div><div id="statusBriefContent${idx}" class="file-card-content"><div class="markdown-content">${renderMarkdownToHtml(domain.brief.content)}</div></div></div>`
+        : `<div style="margin-top:16px;padding:16px;background:var(--s1);border-radius:8px;font-size:13px;color:var(--t3);">No brief generated yet. Run ${domain.name === 'customer-portal' ? '/portal-brief' : '/hedging-brief'} to create one.</div>`;
+      return `<div style="background:var(--s2);border:1px solid var(--b0);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px var(--shadow);"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;"><h2 style="font-size:16px;font-weight:600;color:var(--t1);margin:0;">${label}</h2>${briefDate ? `<span style="font-size:12px;color:var(--t3);background:var(--s1);padding:3px 10px;border-radius:12px;">Updated ${briefDate}</span>` : ''}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;"><div><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--t3);margin-bottom:10px;">Blockers</div>${blockersHtml}</div><div><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--t3);margin-bottom:10px;">Open Questions</div>${questionsHtml}</div></div>${briefSection}</div>`;
+    }
+
+    function toggleStatusBrief(idx) {
+      const content = document.getElementById('statusBriefContent' + idx);
+      const chevron = document.getElementById('statusBriefChevron' + idx);
+      const isExpanded = content.classList.toggle('expanded');
+      chevron.textContent = isExpanded ? '▲ Collapse' : '▼ Expand';
+    }
+
+    openStatusBtn.addEventListener('click', loadStatusFolder);
+    window.toggleStatusBrief = toggleStatusBrief;
+
+    // ============================================================
+    // ===== GLOSSARY =====
+    // ============================================================
+
+    const GLOSSARY_DATA = [
+      { term: 'Hedging', meaning: 'Insurance strategy to offset financial risk in energy markets', category: 'AXPO Terms' },
+      { term: 'Portal', meaning: 'Customer Portal — interface for customers to manage hedging positions', category: 'AXPO Terms' },
+      { term: 'AXPO', meaning: 'Swiss-based energy company. Main offices: Madrid (Spain) + Baden (Switzerland)', category: 'AXPO Terms' },
+      { term: 'Mingle', meaning: "AXPO's internal Confluence instance — docs, specs, and knowledge base", category: 'AXPO Terms' },
+      { term: 'DMA', meaning: 'Direct Market Access — intraday trading feature on the Hedging Tool', category: 'AXPO Terms' },
+      { term: 'Intraday DMA', meaning: 'Feature enabling direct market access for intraday energy trading', category: 'AXPO Terms' },
+      { term: 'Gas Hedge', meaning: 'Hedging flow specifically for gas instruments. Two variants: Simple and Complex', category: 'AXPO Terms' },
+      { term: 'Limit order', meaning: 'Order type on the Hedging Tool — placement and management workflow', category: 'AXPO Terms' },
+      { term: 'Settlement order', meaning: 'Order type related to limit orders (mentioned alongside it)', category: 'AXPO Terms' },
+      { term: 'Chat Experience', meaning: 'Communication/chat feature for traders and clients within the Hedging Tool', category: 'AXPO Terms' },
+      { term: 'TGE', meaning: 'Polish energy exchange (Towarowa Giełda Energii) — gas pilot uses TGE', category: 'AXPO Terms' },
+      { term: 'HT', meaning: 'Hedging Tool', category: 'Notation' },
+      { term: 'UX', meaning: 'User Experience', category: 'Notation' },
+      { term: 'PRD', meaning: 'Product Requirements Document', category: 'Notation' },
+      { term: 'DS', meaning: 'Design System', category: 'Notation' },
+      { term: '!!!', meaning: 'High priority task', category: 'Notation' },
+      { term: '#🧑‍💻Pending', meaning: 'Waiting on information from PM or stakeholder before work can proceed', category: 'Notation' },
+      { term: 'Brief', meaning: 'Synthesized context output from a skill run (not a presentation deck)', category: 'Process' },
+      { term: 'inputs/', meaning: 'Human-curated data — never auto-modified by skills', category: 'Process' },
+      { term: 'data/', meaning: 'Machine-generated derived files — can be overwritten on skill run', category: 'Process' },
+      { term: 'outputs/', meaning: 'Generated artifacts (briefs, logs, snapshots)', category: 'Process' },
+      { term: 'toolbox/', meaning: 'Skill prompt files — source of truth for all /skill-name commands', category: 'Process' },
+      { term: 'KB', meaning: 'Knowledge Base — knowledge/research-insights/. Compiled from Raw/ into Wiki/ articles', category: 'Process' },
+    ];
+
+    let glossaryActiveFilter = 'All';
+
+    function renderGlossary() {
+      const search = (document.getElementById('glossarySearch')?.value || '').toLowerCase();
+      const filtered = GLOSSARY_DATA.filter(item => {
+        const matchesCat = glossaryActiveFilter === 'All' || item.category === glossaryActiveFilter;
+        const matchesSearch = !search || item.term.toLowerCase().includes(search) || item.meaning.toLowerCase().includes(search);
+        return matchesCat && matchesSearch;
+      });
+      const grouped = {};
+      filtered.forEach(item => { if (!grouped[item.category]) grouped[item.category] = []; grouped[item.category].push(item); });
+      const categories = glossaryActiveFilter === 'All' ? ['AXPO Terms', 'Notation', 'Process'] : [glossaryActiveFilter];
+      let html = '';
+      for (const cat of categories) {
+        const items = grouped[cat]; if (!items || items.length === 0) continue;
+        if (glossaryActiveFilter === 'All') html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--t3);margin-bottom:10px;padding:0 2px;">${escapeHtml(cat)}</div>`;
+        html += `<div style="background:var(--s2);border:1px solid var(--b0);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px var(--shadow);margin-bottom:24px;"><table class="memory-flat-table"><thead><tr><th style="width:180px;">Term</th><th>Meaning</th></tr></thead><tbody>`;
+        items.forEach(item => { html += `<tr><td style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;">${escapeHtml(item.term)}</td><td style="color:var(--t2);">${escapeHtml(item.meaning)}</td></tr>`; });
+        html += `</tbody></table></div>`;
+      }
+      if (!html) html = `<p style="color:var(--t3);font-size:14px;text-align:center;padding:60px 0;">No terms match "${escapeHtml(search)}"</p>`;
+      document.getElementById('glossaryTable').innerHTML = html;
+    }
+
+    function filterGlossary() { renderGlossary(); }
+    function setGlossaryFilter(cat) {
+      glossaryActiveFilter = cat;
+      document.querySelectorAll('.glossary-filter').forEach(btn => btn.classList.toggle('active', btn.dataset.cat === cat));
+      renderGlossary();
+    }
+    window.filterGlossary = filterGlossary;
+    window.setGlossaryFilter = setGlossaryFilter;
+
+    // ============================================================
+    // ===== PERSISTENCE (IndexedDB) =====
+    // ============================================================
+
+    const _DB_NAME = 'coworkpilot-context'; const _DB_VERSION = 1; const _STORE = 'handles';
+    function _openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(_DB_NAME, _DB_VERSION);
+        req.onupgradeneeded = e => e.target.result.createObjectStore(_STORE);
+        req.onsuccess = e => resolve(e.target.result); req.onerror = e => reject(e.target.error);
+      });
+    }
+    async function _saveHandle(key, handle) {
+      try { const db = await _openDB(); await new Promise((resolve, reject) => { const tx = db.transaction(_STORE, 'readwrite'); tx.objectStore(_STORE).put(handle, key); tx.oncomplete = resolve; tx.onerror = e => reject(e.target.error); }); } catch (e) {}
+    }
+    async function _loadHandle(key) {
+      try { const db = await _openDB(); return await new Promise((resolve, reject) => { const tx = db.transaction(_STORE, 'readonly'); const req = tx.objectStore(_STORE).get(key); req.onsuccess = e => resolve(e.target.result || null); req.onerror = e => reject(e.target.error); }); } catch (e) { return null; }
+    }
+
+    const restoreBtn = document.getElementById('restoreBtn');
+
+    async function _restoreMemoryHandle(h, withGesture) {
+      const perm = await h.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted' && !withGesture) return false;
+      const granted = perm === 'granted' || (await h.requestPermission({ mode: 'readwrite' })) === 'granted';
+      if (!granted) return false;
+      memoryDirHandle = h;
+      memoryData = { claudeMd: null, memoryFiles: [], memoryDirs: {} };
+      try { const cf = await h.getFileHandle('CLAUDE.md'); const file = await cf.getFile(); memoryData.claudeMd = { content: await file.text(), fileHandle: cf }; } catch (e) {}
+      try {
+        const md = await h.getDirectoryHandle('memory');
+        for await (const entry of md.values()) {
+          if (entry.kind === 'file' && entry.name.endsWith('.md')) { const file = await entry.getFile(); memoryData.memoryFiles.push({ name: entry.name, content: await file.text(), fileHandle: entry }); }
+          else if (entry.kind === 'directory') {
+            memoryData.memoryDirs[entry.name] = [];
+            for await (const sub of entry.values()) {
+              if (sub.kind === 'file' && sub.name.endsWith('.md')) { const file = await sub.getFile(); const content = await file.text(); memoryData.memoryDirs[entry.name].push({ name: sub.name, content, fileHandle: sub, dirHandle: entry, parsed: parseMemoryMarkdown(content) }); }
+            }
+          }
+        }
+      } catch (e) {}
+      renderMemory(); memoryEmptyState.style.display = 'none'; memoryMainContent.style.display = 'flex';
+      if (activeTab === 'memory') filePathEl.textContent = h.name;
+      return true;
+    }
+
+    async function _restoreStatusHandle(h, withGesture) {
+      const perm = await h.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted' && !withGesture) return false;
+      const granted = perm === 'granted' || (await h.requestPermission({ mode: 'readwrite' })) === 'granted';
+      if (!granted) return false;
+      statusDirHandle = h;
+      if (activeTab === 'status') { filePathEl.textContent = h.name; await renderStatusData(); }
+      return true;
+    }
+
+    (async function initContext() {
+      await requireAuth();
+
+      const [hMemory, hStatus] = await Promise.all([_loadHandle('contextMemoryDir'), _loadHandle('contextStatusDir')]);
+      let needsGesture = [];
+      if (hMemory) { try { if (!await _restoreMemoryHandle(hMemory, false)) needsGesture.push({ key: 'memory', h: hMemory }); } catch (e) { needsGesture.push({ key: 'memory', h: hMemory }); } }
+      if (hStatus) { try { if (!await _restoreStatusHandle(hStatus, false)) needsGesture.push({ key: 'status', h: hStatus }); } catch (e) { needsGesture.push({ key: 'status', h: hStatus }); } }
+
+      if (needsGesture.length > 0) {
+        restoreBtn.style.display = 'inline-flex';
+        restoreBtn.addEventListener('click', async () => {
+          restoreBtn.disabled = true; restoreBtn.textContent = 'Restoring…';
+          for (const { key, h } of needsGesture) {
+            try { if (key === 'memory') await _restoreMemoryHandle(h, true); if (key === 'status') await _restoreStatusHandle(h, true); } catch (e) {}
+          }
+          restoreBtn.style.display = 'none'; showStatus('Workspace restored'); switchTab(activeTab);
+        }, { once: true });
+      }
+    })();
+  </script>
+</body>
+</html>
