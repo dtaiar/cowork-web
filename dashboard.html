@@ -42,6 +42,9 @@
       --blue:   #4A8EF7; --blue-d:   rgba(74,142,247,.13);
       --violet: #9B7DF7; --violet-d: rgba(155,125,247,.13);
 
+      --shadow:       rgba(0,0,0,0.35);
+      --shadow-hover: rgba(0,0,0,0.55);
+
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
     }
@@ -1255,7 +1258,7 @@
     }
 
     .back-btn-dash {
-      width: 34px; height: 34px;
+      width: 32px; height: 32px;
       background: var(--s2);
       border: 1px solid var(--b1);
       border-radius: 10px;
@@ -1265,8 +1268,6 @@
     }
     .back-btn-dash:hover { border-color: rgba(255,255,255,0.2); color: var(--t1); }
     .back-btn-dash svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-    .view-toggle button.active { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; color: var(--t1) !important; }
-    .memory-tab.active { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; color: var(--t1) !important; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
@@ -1294,10 +1295,8 @@
     </div>
     <div class="buttons">
       <button id="restoreBtn" style="display: none;">↩ Restore workspace</button>
-      <button id="openTaskBtn" style="display: none;">Refresh</button>
       <button id="openMemoryBtn" style="display: none;">Open Folder</button>
-      <button id="openStatusBtn" style="display: none;">Open Folder</button>
-      <button id="saveBtn" class="primary" disabled style="display: none;">Save</button>
+      <button id="openStatusBtn" style="display: none;">Load Briefs</button>
     </div>
   </header>
 
@@ -1328,9 +1327,7 @@
   <!-- STATUS TAB PANEL -->
   <div class="tab-panel" id="statusPanel">
     <div id="statusEmptyState" class="empty-state">
-      <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--t1);">Open your CoWorkPilot folder</p>
-      <p style="margin-bottom: 24px; color: var(--t3); font-size: 14px;">Loads briefs, blockers, and open questions across all domains</p>
-      <button id="openStatusBtnLarge">Open Folder</button>
+      <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--t1);">Loading status…</p>
     </div>
     <div id="statusMainContent" style="display: none; flex-direction: column; min-height: 0; flex: 1;">
       <div style="overflow-y: auto; flex: 1; padding-right: 4px;">
@@ -1376,7 +1373,7 @@
 
   <script>
     // ===== SHARED STATE =====
-    let activeMainTab = 'tasks'; // 'tasks', 'memory', 'status', 'glossary', 'linkedin'
+    let activeMainTab = 'tasks'; // 'tasks' | 'memory' | 'status' | 'glossary'
 
     const statusEl = document.getElementById('status');
     const filePathEl = document.getElementById('filePath');
@@ -1397,10 +1394,8 @@
     const statusPanel = document.getElementById('statusPanel');
     const glossaryPanel = document.getElementById('glossaryPanel');
     const taskViewToggle = document.getElementById('taskViewToggle');
-    const openTaskBtn = document.getElementById('openTaskBtn');
     const openMemoryBtn = document.getElementById('openMemoryBtn');
     const openStatusBtn = document.getElementById('openStatusBtn');
-    const saveBtn = document.getElementById('saveBtn');
 
     function switchMainTab(tab) {
       activeMainTab = tab;
@@ -1419,10 +1414,8 @@
       taskViewToggle.style.display = tab === 'tasks' ? 'flex' : 'none';
 
       // Show/hide appropriate buttons
-      openTaskBtn.style.display = 'none';
       openMemoryBtn.style.display = tab === 'memory' ? 'inline-flex' : 'none';
-      openStatusBtn.style.display = (tab === 'status' && !statusDirHandle) ? 'inline-flex' : 'none';
-      saveBtn.style.display = 'none';
+      openStatusBtn.style.display = tab === 'status' ? 'inline-flex' : 'none';
 
       // Update file path display
       if (tab === 'tasks') {
@@ -1435,8 +1428,8 @@
         filePathEl.textContent = '';
       }
 
-      // Auto-render status if folder already loaded
-      if (tab === 'status' && statusDirHandle) {
+      // Auto-render status on tab switch (loads from Supabase; briefs from file if open)
+      if (tab === 'status') {
         renderStatusData();
       }
       // Render glossary on switch
@@ -1468,88 +1461,6 @@
 
     function taskSectionId(name) {
       return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    }
-
-    function parseTaskMarkdown(content) {
-      const resultSections = [];
-      const resultTasks = {};
-      let currentSection = null;
-      let currentSectionId = null;
-
-      const lines = content.split('\n');
-      let currentTask = null;
-
-      for (const line of lines) {
-        const headerMatch = line.match(/^## \*{0,2}(.+?)\*{0,2}$/);
-        if (headerMatch) {
-          if (currentTask && currentSectionId) {
-            resultTasks[currentSectionId].push(currentTask);
-            currentTask = null;
-          }
-
-          const sectionName = headerMatch[1].trim();
-          currentSectionId = taskSectionId(sectionName);
-          currentSection = sectionName;
-
-          if (!resultTasks[currentSectionId]) {
-            resultSections.push({ id: currentSectionId, name: sectionName });
-            resultTasks[currentSectionId] = [];
-          }
-        } else if (currentSectionId && line.match(/^- \[[ xX]\]/)) {
-          if (currentTask) {
-            resultTasks[currentSectionId].push(currentTask);
-          }
-          const checked = line.match(/\[[xX]\]/) !== null;
-          let text = line.replace(/^- \[[ xX]\]\s*/, '');
-          let title = text;
-          let note = '';
-
-          const boldMatch = text.match(/^\*\*(.+?)\*\*(.*)$/);
-          if (boldMatch) {
-            title = boldMatch[1];
-            note = boldMatch[2].replace(/^\s*-\s*/, '').trim();
-          }
-
-          currentTask = {
-            id: Date.now() + Math.random(),
-            title,
-            note,
-            checked,
-            subtasks: [],
-            section: currentSectionId
-          };
-        } else if (currentTask && line.match(/^\s+- \[[ xX]\]/)) {
-          const checked = line.match(/\[[xX]\]/) !== null;
-          const text = line.replace(/^\s+- \[[ xX]\]\s*/, '');
-          currentTask.subtasks.push({ text, checked });
-        }
-      }
-
-      if (currentTask && currentSectionId) {
-        resultTasks[currentSectionId].push(currentTask);
-      }
-
-      return { sections: resultSections, tasks: resultTasks };
-    }
-
-    function toMarkdown() {
-      let md = '# Tasks\n';
-
-      sections.forEach((section, idx) => {
-        md += `\n## ${section.name}\n`;
-        const sectionTasks = tasks[section.id] || [];
-        sectionTasks.forEach(t => {
-          const checkbox = t.checked ? '[x]' : '[ ]';
-          const note = t.note ? ` - ${t.note}` : '';
-          md += `- ${checkbox} **${t.title}**${note}\n`;
-          t.subtasks.forEach(st => {
-            const stCheckbox = st.checked ? '[x]' : '[ ]';
-            md += `  - ${stCheckbox} ${st.text}\n`;
-          });
-        });
-      });
-
-      return md.trimEnd() + '\n';
     }
 
     function createCard(task) {
@@ -2645,8 +2556,6 @@
       input.addEventListener('blur', saveSection);
     }
 
-    openTaskBtn.addEventListener('click', loadTasksFromDB);
-
     window.addEventListener('beforeunload', (e) => {
       if (hasChanges) { e.preventDefault(); e.returnValue = ''; }
     });
@@ -3290,26 +3199,11 @@
       try {
         statusDirHandle = await window.showDirectoryPicker();
         filePathEl.textContent = statusDirHandle.name;
-        openStatusBtn.style.display = 'none';
-        showStatus('Folder opened — loading status…');
+        showStatus('Folder opened — loading briefs…');
         await renderStatusData();
         if (typeof _saveHandle === 'function') await _saveHandle('statusDir', statusDirHandle);
       } catch (e) {
         if (e.name !== 'AbortError') showStatus('Error: ' + e.message);
-      }
-    }
-
-    async function readFileText(dirHandle, ...pathParts) {
-      try {
-        let current = dirHandle;
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          current = await current.getDirectoryHandle(pathParts[i]);
-        }
-        const fileHandle = await current.getFileHandle(pathParts[pathParts.length - 1]);
-        const file = await fileHandle.getFile();
-        return await file.text();
-      } catch (e) {
-        return null;
       }
     }
 
@@ -3348,20 +3242,6 @@
       }
     }
 
-    async function readJson(domainDirHandle, ...pathParts) {
-      try {
-        let current = domainDirHandle;
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          current = await current.getDirectoryHandle(pathParts[i]);
-        }
-        const fileHandle = await current.getFileHandle(pathParts[pathParts.length - 1]);
-        const file = await fileHandle.getFile();
-        return JSON.parse(await file.text());
-      } catch (e) {
-        return null;
-      }
-    }
-
     function countActiveTasks() {
       // Count unchecked tasks in the Active section (loaded from Supabase)
       try {
@@ -3375,56 +3255,73 @@
     }
 
     async function renderStatusData() {
-      const domains = [];
-      let totalBlockers = 0;
-      let totalQuestions = 0;
-
-      // Try to find axpo/ dir
-      const axpoEntries = await listDir(statusDirHandle, 'axpo');
-      for (const entry of axpoEntries) {
-        if (entry.kind !== 'directory') continue;
-        const domainName = entry.name;
-        const domainDir = await (await statusDirHandle.getDirectoryHandle('axpo')).getDirectoryHandle(domainName);
-
-        const brief = await getLatestBrief(domainDir);
-        const blockersJson = await readJson(domainDir, 'data', 'blockers.json');
-        const questionsJson = await readJson(domainDir, 'data', 'open-questions.json');
-
-        const blockers = blockersJson?.blockers || [];
-        const questions = questionsJson?.questions || [];
-
-        totalBlockers += blockers.length;
-        totalQuestions += questions.length;
-
-        domains.push({ name: domainName, brief, blockers, questions });
-      }
-
-      // Quick stats
-      const statsEl = document.getElementById('statusQuickStats');
-      const activeTasks = countActiveTasks();
-      const statsHtml = [
-        activeTasks !== null
-          ? `<div class="stat"><div class="stat-value">${activeTasks}</div><div class="stat-label">Active Tasks</div></div>`
-          : '',
-        `<div class="stat"><div class="stat-value">${totalBlockers}</div><div class="stat-label">Blockers</div></div>`,
-        `<div class="stat"><div class="stat-value">${totalQuestions}</div><div class="stat-label">Open Questions</div></div>`,
-        `<div class="stat"><div class="stat-value">${domains.length}</div><div class="stat-label">Domains</div></div>`,
-      ].join('');
-      statsEl.innerHTML = statsHtml;
-
-      // Domain cards
-      const domainsEl = document.getElementById('statusDomains');
-      if (domains.length === 0) {
-        domainsEl.innerHTML = '<p style="color: var(--t3); font-size: 14px;">No domains found in axpo/. Run /hedging-brief or /portal-brief to generate a brief.</p>';
-      } else {
-        domainsEl.innerHTML = domains.map((d, i) => renderDomainCard(d, i)).join('');
-      }
-
-      // Show content
+      // Show content immediately (no folder required for blockers/questions)
       document.getElementById('statusEmptyState').style.display = 'none';
       document.getElementById('statusMainContent').style.display = 'flex';
 
-      showStatus('Status loaded');
+      try {
+        // Fetch live data from Supabase
+        const [blockersRes, questionsRes] = await Promise.all([
+          sb.from('intel').select('*').eq('type', 'blocker').eq('resolved', false),
+          sb.from('intel').select('*').eq('type', 'question').eq('resolved', false)
+        ]);
+
+        const allBlockers = blockersRes.data || [];
+        const allQuestions = questionsRes.data || [];
+        const totalBlockers = allBlockers.length;
+        const totalQuestions = allQuestions.length;
+
+        // One card per project
+        const PROJECT_KEYS = ['hedging-tool', 'customer-portal'];
+        const domains = PROJECT_KEYS.map(proj => ({
+          name: proj,
+          blockers: allBlockers.filter(b => b.project === proj),
+          questions: allQuestions.filter(q => q.project === proj),
+          brief: null
+        }));
+
+        // Load briefs from filesystem if folder is open
+        if (statusDirHandle) {
+          const axpoEntries = await listDir(statusDirHandle, 'axpo');
+          for (const entry of axpoEntries) {
+            if (entry.kind !== 'directory') continue;
+            const domainDir = await (await statusDirHandle.getDirectoryHandle('axpo')).getDirectoryHandle(entry.name);
+            const brief = await getLatestBrief(domainDir);
+            const domain = domains.find(d => d.name === entry.name);
+            if (domain) domain.brief = brief;
+          }
+        }
+
+        // Quick stats
+        const statsEl = document.getElementById('statusQuickStats');
+        const activeTasks = countActiveTasks();
+        statsEl.innerHTML = [
+          activeTasks !== null
+            ? `<div class="stat"><div class="stat-value">${activeTasks}</div><div class="stat-label">Active Tasks</div></div>`
+            : '',
+          `<div class="stat"><div class="stat-value">${totalBlockers}</div><div class="stat-label">Blockers</div></div>`,
+          `<div class="stat"><div class="stat-value">${totalQuestions}</div><div class="stat-label">Open Questions</div></div>`,
+          `<div class="stat"><div class="stat-value">${PROJECT_KEYS.length}</div><div class="stat-label">Domains</div></div>`,
+        ].join('');
+
+        // Domain cards
+        document.getElementById('statusDomains').innerHTML =
+          domains.map((d, i) => renderDomainCard(d, i)).join('');
+
+        showStatus('Status loaded');
+      } catch (e) {
+        console.error('renderStatusData:', e);
+        showStatus('Error loading status');
+      }
+    }
+
+    // Read intel content — handles both plain string (Telegram) and JSON object (legacy)
+    function intelContent(row) {
+      const raw = row.content;
+      if (!raw) return '';
+      if (typeof raw === 'string') return raw;
+      if (typeof raw === 'object') return raw.description || raw.text || JSON.stringify(raw);
+      return String(raw);
     }
 
     function renderDomainCard(domain, idx) {
@@ -3435,18 +3332,15 @@
         ? domain.blockers.map(b => `
             <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px;">
               <span style="color: #e5534b; font-size: 13px; flex-shrink: 0; margin-top: 1px;">●</span>
-              <span style="font-size: 13px; color: var(--t2);">${escapeHtml(b.blocker || b.description || JSON.stringify(b))}</span>
+              <span style="font-size: 13px; color: var(--t2);">${escapeHtml(intelContent(b))}</span>
             </div>`).join('')
         : '<p style="font-size: 13px; color: var(--t3);">No blockers logged.</p>';
 
       const questionsHtml = domain.questions.length > 0
         ? domain.questions.map(q => `
             <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px;">
-              <span style="color: var(--accent); font-size: 13px; flex-shrink: 0; margin-top: 1px;">${q.id || '?'}</span>
-              <div>
-                <div style="font-size: 13px; color: var(--t2);">${escapeHtml(q.question || JSON.stringify(q))}</div>
-                ${q.blocker ? '<span style="font-size: 11px; color: #e5534b; font-weight: 600;">BLOCKER</span>' : ''}
-              </div>
+              <span style="color: var(--accent); font-size: 13px; flex-shrink: 0; margin-top: 1px;">?</span>
+              <span style="font-size: 13px; color: var(--t2);">${escapeHtml(intelContent(q))}</span>
             </div>`).join('')
         : '<p style="font-size: 13px; color: var(--t3);">No open questions logged.</p>';
 
@@ -3491,9 +3385,8 @@
       chevron.textContent = isExpanded ? '▲ Collapse' : '▼ Expand';
     }
 
-    // Status event listeners
+    // Status event listeners — "Load Briefs" button opens folder for brief display only
     openStatusBtn.addEventListener('click', loadStatusFolder);
-    document.getElementById('openStatusBtnLarge').addEventListener('click', loadStatusFolder);
 
     // Expose Status functions
     window.toggleStatusBrief = toggleStatusBrief;
