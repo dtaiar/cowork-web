@@ -93,16 +93,16 @@
     }
 
     .back-btn {
-      width: 30px; height: 30px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 9px;
+      width: 32px; height: 32px;
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 10px;
       display: inline-flex; align-items: center; justify-content: center;
-      text-decoration: none; color: rgba(255,255,255,0.4);
+      text-decoration: none; color: var(--t2);
       flex-shrink: 0; transition: all 0.15s;
     }
-    .back-btn:hover { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); }
-    .back-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .back-btn:active { background: var(--s2); }
+    .back-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
     .wordmark {
       font-size: 20px;
@@ -309,10 +309,13 @@
       letter-spacing: 0.1px;
     }
 
-    .b-ht      { background: var(--blue-d);   color: var(--blue);  }
-    .b-portal  { background: var(--green-d);  color: var(--green); }
-    .b-design  { background: var(--violet-d); color: var(--violet);}
-    .b-other   { background: var(--amber-d);  color: var(--amber); }
+    .b-ht,
+    .b-hedging,
+    .b-hedging-tool   { background: var(--blue-d);   color: var(--blue);  }
+    .b-portal,
+    .b-customer-portal{ background: var(--green-d);  color: var(--green); }
+    .b-design         { background: var(--violet-d); color: var(--violet);}
+    .b-other          { background: var(--amber-d);  color: var(--amber); }
     .b-high    { background: var(--red-d);    color: var(--red);   }
     .b-medium  { background: var(--amber-d);  color: var(--amber); }
     .b-low     { background: var(--green-d);  color: var(--green); }
@@ -383,14 +386,16 @@
     }
 
     /* per-chip accent overrides */
-    .c-ht      { --_c: var(--blue);   --_cd: var(--blue-d);   }
-    .c-portal  { --_c: var(--green);  --_cd: var(--green-d);  }
-    .c-design  { --_c: var(--violet); --_cd: var(--violet-d); }
-    .c-other   { --_c: var(--amber);  --_cd: var(--amber-d);  }
-    .c-idea    { --_c: var(--blue);   --_cd: var(--blue-d);   }
-    .c-question{ --_c: var(--amber);  --_cd: var(--amber-d);  }
-    .c-link    { --_c: var(--violet); --_cd: var(--violet-d); }
-    .c-obs     { --_c: var(--green);  --_cd: var(--green-d);  }
+    .c-ht,
+    .c-hedging-tool    { --_c: var(--blue);   --_cd: var(--blue-d);   }
+    .c-portal,
+    .c-customer-portal { --_c: var(--green);  --_cd: var(--green-d);  }
+    .c-design          { --_c: var(--violet); --_cd: var(--violet-d); }
+    .c-other           { --_c: var(--amber);  --_cd: var(--amber-d);  }
+    .c-idea            { --_c: var(--blue);   --_cd: var(--blue-d);   }
+    .c-question        { --_c: var(--amber);  --_cd: var(--amber-d);  }
+    .c-link            { --_c: var(--violet); --_cd: var(--violet-d); }
+    .c-obs             { --_c: var(--green);  --_cd: var(--green-d);  }
 
     /* ═══════════════════════════════════════
        TEXTAREA
@@ -687,14 +692,22 @@ let state = {
    NAV STATE
 ═══════════════════════════════════════════════════════════════ */
 let tab       = 'capture';
-let selProj   = 'portal';
+let selProj   = 'customer-portal';
 let selType   = 'idea';
 let capFilt   = 'all';
 let taskFilt  = 'all';
 let intelTab  = 'blockers';
 let intelFilt = 'all';
+let intelProj = 'hedging-tool';
 
-const PROJ  = { hedging:'Hedging', portal:'Portal', design:'Design', other:'Other' };
+const PROJ  = {
+  'hedging':        'Hedging',
+  'hedging-tool':   'Hedging',
+  'portal':         'Portal',
+  'customer-portal':'Portal',
+  'design':         'Design',
+  'other':          'Other'
+};
 const TYPES = { idea:'💡 Idea', question:'❓ Question', link:'🔗 Link', obs:'👁 Observation' };
 const TICON = { idea:'💡', question:'❓', link:'🔗', obs:'👁' };
 
@@ -784,7 +797,7 @@ function renderCapture() {
     <div class="card" style="margin-bottom:20px">
       <div class="field-label">Project</div>
       <div class="chip-group">
-        ${Object.entries(PROJ).map(([k,v]) =>
+        ${[['hedging-tool','Hedging'],['customer-portal','Portal'],['design','Design'],['other','Other']].map(([k,v]) =>
           `<button class="chip c-${k} ${selProj===k?'on':''}" onclick="sp('${k}')">${v}</button>`
         ).join('')}
       </div>
@@ -800,8 +813,8 @@ function renderCapture() {
     </div>`;
 
   const fbar = `<div class="filter-bar">
-    ${['all',...Object.keys(PROJ)].map(f =>
-      `<button class="fp ${capFilt===f?'on':''}" onclick="setCF('${f}')">${f==='all'?'All':PROJ[f]}</button>`
+    ${[['all','All'],['hedging-tool','Hedging'],['customer-portal','Portal'],['design','Design'],['other','Other']].map(([f,l]) =>
+      `<button class="fp ${capFilt===f?'on':''}" onclick="setCF('${f}')">${l}</button>`
     ).join('')}
   </div>`;
 
@@ -842,8 +855,8 @@ function renderTasks() {
   const filt = taskFilt === 'all' ? all : all.filter(t => t.project === taskFilt);
 
   const fbar = `<div class="filter-bar">
-    ${['all',...Object.keys(PROJ)].map(f =>
-      `<button class="fp ${taskFilt===f?'on':''}" onclick="setTF('${f}')">${f==='all'?'All':PROJ[f]}</button>`
+    ${[['all','All'],['hedging-tool','Hedging'],['customer-portal','Portal'],['design','Design'],['other','Other']].map(([f,l]) =>
+      `<button class="fp ${taskFilt===f?'on':''}" onclick="setTF('${f}')">${l}</button>`
     ).join('')}
   </div>`;
 
@@ -896,24 +909,58 @@ function renderIntel() {
   </div>`;
 
   const fbar = `<div class="filter-bar">
-    ${['all','hedging','portal'].map(f =>
-      `<button class="fp ${intelFilt===f?'on':''}" onclick="setIF('${f}')">${f==='all'?'All':PROJ[f]}</button>`
+    ${[['all','All'],['hedging-tool','Hedging'],['customer-portal','Portal']].map(([f,l]) =>
+      `<button class="fp ${intelFilt===f?'on':''}" onclick="setIF('${f}')">${l}</button>`
     ).join('')}
   </div>`;
 
+  const intelForm = (type) => `
+    <div class="card" style="margin-bottom:16px">
+      <div class="field-label">Project</div>
+      <div class="chip-group" style="margin-bottom:12px">
+        ${[['hedging-tool','Hedging'],['customer-portal','Portal']].map(([k,v]) =>
+          `<button class="chip c-${k} ${intelProj===k?'on':''}" onclick="setIP('${k}')">${v}</button>`
+        ).join('')}
+      </div>
+      <textarea id="intelTxt" placeholder="${type==='blocker'?'What\'s blocking you?':'What do you need answered?'}" style="min-height:70px"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary" style="font-size:13px;padding:10px 14px" onclick="addIntel('${type}')">Log ${type}</button>
+      </div>
+    </div>`;
+
   let body = nav + (intelTab !== 'glossary' ? fbar : '');
+  if (intelTab === 'blockers' || intelTab === 'questions') {
+    body += intelForm(intelTab === 'blockers' ? 'blocker' : 'question');
+  }
+
+  // Helper: intel content field supports both plain strings (from Telegram) and legacy JSON objects
+  function intelText(row, ...fields) {
+    const raw = row.content;
+    if (!raw) return '';
+    if (typeof raw === 'string') return raw;
+    const obj = (typeof raw === 'object') ? raw : {};
+    for (const f of fields) { if (obj[f]) return obj[f]; }
+    return '';
+  }
+  function intelObj(row) {
+    const raw = row.content;
+    if (!raw || typeof raw === 'string') return {};
+    return typeof raw === 'object' ? raw : {};
+  }
 
   if (intelTab === 'blockers') {
     const items = state.blockers.filter(b => intelFilt==='all' || b.project===intelFilt);
     if (!items.length) return body + empty('🎉','No blockers in scope');
     items.forEach(b => {
-      const c = b.content || {};
+      const c = intelObj(b);
+      const text = intelText(b, 'description', 'text');
       body += `<div class="card ${b.urgent?'card-urgent':''}">
         <div class="meta">
           <span class="badge b-${b.project}">${PROJ[b.project]||b.project||''}</span>
           ${b.urgent ? `<span class="badge b-urgent">URGENT</span>` : ''}
+          <span class="ts">${fmtRel(b.created_at)}</span>
         </div>
-        <div class="body-t">${esc(c.description||c.text||'')}</div>
+        <div class="body-t">${esc(text)}</div>
         ${c.impact ? `<div class="sub-t">${esc(c.impact)}</div>` : ''}
         <div class="info-row">
           ${c.owner ? `<span>👤 ${esc(c.owner)}</span>` : ''}
@@ -927,50 +974,54 @@ function renderIntel() {
     const items = state.questions.filter(q => intelFilt==='all' || q.project===intelFilt);
     if (!items.length) return body + empty('🎉','No open questions');
     items.forEach(q => {
-      const c = q.content || {};
+      const c = intelObj(q);
+      const text = intelText(q, 'text', 'question');
       body += `<div class="card">
         <div class="meta">
           <span class="badge b-${q.project}">${PROJ[q.project]||q.project||''}</span>
           ${c.priority ? `<span class="badge b-${c.priority}">${c.priority}</span>` : ''}
           ${c.blocker  ? `<span class="badge b-blocker">Blocker</span>` : ''}
+          <span class="ts">${fmtRel(q.created_at)}</span>
         </div>
-        <div class="body-t">${esc(c.text||'')}</div>
+        <div class="body-t">${esc(text)}</div>
         ${c.context ? `<div class="sub-t">${esc(c.context)}</div>` : ''}
       </div>`;
     });
   }
 
   if (intelTab === 'decisions') {
-    const items = state.decisions.filter(d => intelFilt==='all' || d.project===intelFilt || (Array.isArray((d.content||{}).domains) && (d.content.domains.includes(intelFilt))));
+    const items = state.decisions.filter(d => intelFilt==='all' || d.project===intelFilt || (Array.isArray(intelObj(d).domains) && intelObj(d).domains.includes(intelFilt)));
     if (!items.length) return body + empty('📋','No decisions logged');
     items.forEach(d => {
-      const c = d.content || {};
+      const c = intelObj(d);
+      const text = intelText(d, 'text', 'decision');
       body += `<div class="card">
         <div class="meta">
           <span class="badge b-${d.project}">${PROJ[d.project]||d.project||''}</span>
           <span class="ts">${fmtDate(d.created_at)}</span>
         </div>
-        <div class="body-t">${esc(c.text||c.decision||'')}</div>
+        <div class="body-t">${esc(text)}</div>
         ${c.approved_by ? `<div class="sub-t">↳ ${esc(c.approved_by)}</div>` : ''}
       </div>`;
     });
   }
 
   if (intelTab === 'actions') {
-    const open = state.actions.filter(a => !(a.content||{}).done);
-    const done = state.actions.filter(a =>  (a.content||{}).done);
+    const open = state.actions.filter(a => !intelObj(a).done);
+    const done = state.actions.filter(a =>  intelObj(a).done);
     if (!state.actions.length) return body + empty('✅','No action items');
 
     if (open.length) {
       body += `<div class="sec"><span class="sec-label">Open</span><span class="sec-count">${open.length}</span></div>`;
       open.forEach(a => {
-        const c = a.content || {};
+        const c = intelObj(a);
+        const text = intelText(a, 'text', 'action');
         body += `<div class="card ${a.urgent?'card-urgent':''}">
           <div class="meta">
             ${a.urgent ? `<span class="badge b-urgent">URGENT</span>` : ''}
             ${c.due ? `<span class="ts">${esc(c.due)}</span>` : ''}
           </div>
-          <div class="body-t">${esc(c.text||'')}</div>
+          <div class="body-t">${esc(text)}</div>
           ${c.owner ? `<div class="sub-t">👤 ${esc(c.owner)}</div>` : ''}
         </div>`;
       });
@@ -978,8 +1029,8 @@ function renderIntel() {
     if (done.length) {
       body += `<div class="sec"><span class="sec-label">Done</span><span class="sec-count">${done.length}</span></div>`;
       done.forEach(a => {
-        const c = a.content || {};
-        body += `<div class="card" style="opacity:.35"><div class="body-t" style="text-decoration:line-through">${esc(c.text||'')}</div></div>`;
+        const text = intelText(a, 'text', 'action');
+        body += `<div class="card" style="opacity:.35"><div class="body-t" style="text-decoration:line-through">${esc(text)}</div></div>`;
       });
     }
   }
@@ -1018,33 +1069,34 @@ function renderIntel() {
 /* ═══════════════════════════════════════════════════════════════
    LINKEDIN TAB
 ═══════════════════════════════════════════════════════════════ */
-const LI_PILLARS = [
-  { id:'p1', label:'UI craft + design systems',  color:'#378ADD', tag:'Core' },
-  { id:'p2', label:'AI in design practice',       color:'#7F77DD', tag:'Timely' },
-  { id:'p3', label:'Design in complex products',  color:'#1D9E75', tag:'B2B' },
-  { id:'p4', label:'Designer career + growth',    color:'#BA7517', tag:'Community' },
-];
+// Must match linkedin.html TOPICS keys exactly
+const LI_TOPICS = {
+  design:    { label:'Design',      color:'#4A8EF7' },
+  product:   { label:'Product',     color:'#F0A928' },
+  tools:     { label:'Tools',       color:'#3CBFB8' },
+  personal:  { label:'Personal',    color:'#3DC87A' },
+  casestudy: { label:'Case Study',  color:'#9B7DF7' },
+};
 
-let liSelPillar = 'p1';
-function liPick(p) { liSelPillar = p; render(); }
+let liSelTopic = 'design';
+function liPick(t) { liSelTopic = t; render(); }
 
 function renderLinkedin() {
   const posts = state.liPosts;
 
-  const pillarDots = LI_PILLARS.map(p => `
-    <button onclick="liPick('${p.id}')" style="
-      flex:1;border:1px solid ${liSelPillar===p.id ? p.color : 'rgba(255,255,255,0.08)'};
-      background:${liSelPillar===p.id ? p.color+'22' : 'var(--s1)'};
+  const topicBtns = Object.entries(LI_TOPICS).map(([k, v]) => `
+    <button onclick="liPick('${k}')" style="
+      flex:1;border:1px solid ${liSelTopic===k ? v.color : 'rgba(255,255,255,0.08)'};
+      background:${liSelTopic===k ? v.color+'22' : 'var(--s1)'};
       border-radius:10px;padding:10px 6px;cursor:pointer;text-align:left;position:relative;overflow:hidden;">
-      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${p.color};border-radius:3px 0 0 3px;"></div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:3px;padding-left:6px;">${p.tag}</div>
-      <div style="font-size:11px;font-weight:500;color:${liSelPillar===p.id ? '#fff' : 'rgba(255,255,255,0.65)'};line-height:1.3;padding-left:6px;">${p.label}</div>
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${v.color};border-radius:3px 0 0 3px;"></div>
+      <div style="font-size:12px;font-weight:500;color:${liSelTopic===k ? '#fff' : 'rgba(255,255,255,0.55)'};line-height:1.3;padding-left:8px;">${v.label}</div>
     </button>`).join('');
 
   const captureForm = `
     <div class="card" style="margin-bottom:20px">
-      <div class="field-label">Pillar</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:14px;">${pillarDots}</div>
+      <div class="field-label">Topic</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:14px;">${topicBtns}</div>
       <div class="field-label">Idea</div>
       <textarea id="liTxt" placeholder="Post angle, observation, hook…" style="min-height:80px"></textarea>
       <button class="btn btn-primary" onclick="liSaveIdea()">Save idea</button>
@@ -1058,18 +1110,18 @@ function renderLinkedin() {
   };
 
   const postRow = p => {
-    const pillar = LI_PILLARS.find(x => x.id === p.topic) || LI_PILLARS[0];
+    const topic = LI_TOPICS[p.topic] || { label: p.topic || 'Post', color:'#888' };
     const st = STATUS_STYLE[p.status] || STATUS_STYLE.idea;
     const preview = p.hook || p.content || 'Untitled';
     return `
       <div style="background:var(--s1);border:1px solid ${p.status==='drafting'?'rgba(155,125,247,.2)':'rgba(255,255,255,0.06)'};border-radius:10px;
                   padding:10px 12px 10px 14px;display:flex;align-items:center;gap:10px;
                   position:relative;overflow:hidden;margin-bottom:8px;">
-        <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${pillar.color};border-radius:3px 0 0 3px;"></div>
+        <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${topic.color};border-radius:3px 0 0 3px;"></div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(preview)}</div>
           <div style="display:flex;gap:6px;margin-top:3px;align-items:center;">
-            <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:500;background:${pillar.color}22;color:${pillar.color};">${pillar.label.split('&')[0].trim()}</span>
+            <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:500;background:${topic.color}22;color:${topic.color};">${topic.label}</span>
             <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:500;background:${st.bg};color:${st.color};">${st.label}</span>
             <span class="ts">${fmtRel(p.created_at)}</span>
           </div>
@@ -1137,6 +1189,26 @@ async function toggleTask(id) {
 ═══════════════════════════════════════════════════════════════ */
 const setIT = t => { intelTab = t; intelFilt = 'all'; render(); };
 const setIF = f => { intelFilt = f; render(); };
+const setIP = p => { intelProj = p; render(); };
+
+async function addIntel(type) {
+  const el = document.getElementById('intelTxt');
+  const content = el?.value?.trim();
+  if (!content) { toast('Write something first'); return; }
+  const row = await Intel.add({
+    type,
+    project: intelProj,
+    content,
+    urgent: type === 'blocker'
+  });
+  if (row) {
+    if (type === 'blocker')  state.blockers.unshift(row);
+    if (type === 'question') state.questions.unshift(row);
+  }
+  el.value = '';
+  toast(`${type === 'blocker' ? 'Blocker' : 'Question'} logged ✓`);
+  render();
+}
 
 /* ═══════════════════════════════════════════════════════════════
    LINKEDIN ACTIONS
@@ -1144,7 +1216,7 @@ const setIF = f => { intelFilt = f; render(); };
 async function liSaveIdea() {
   const txt = document.getElementById('liTxt')?.value?.trim();
   if (!txt) { toast('Write something first'); return; }
-  const post = await LI.add({ topic: liSelPillar, hook: txt, content: '', status: 'idea' });
+  const post = await LI.add({ topic: liSelTopic, hook: txt, content: '', status: 'idea' });
   if (post) state.liPosts.unshift(post);
   document.getElementById('liTxt').value = '';
   toast('Idea saved ✓');

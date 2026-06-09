@@ -2,34 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Productivity</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CoWork">
+  <title>Dashboard · CoWork</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='24' height='28' rx='4' fill='%23faf9f5' stroke='%23D97757' stroke-width='2'/%3E%3Crect x='8' y='0' width='16' height='5' rx='2.5' fill='%23D97757'/%3E%3Cpath d='M9 13l3 3 5-5' fill='none' stroke='%23D97757' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='20' y='12' width='5' height='2' rx='1' fill='%23c4c4c2'/%3E%3Crect x='9' y='20' width='10' height='2' rx='1' fill='%23c4c4c2'/%3E%3Crect x='9' y='25' width='7' height='2' rx='1' fill='%23c4c4c2'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg-primary:   #090909;
-      --bg-secondary: #141414;
-      --bg-card:      #1e1e1e;
-      --text-primary:   #efefef;
-      --text-secondary: #aaaaaa;
-      --text-muted:     #666666;
+      /* Surface */
+      --bg:  #090909;
+      --s1:  #141414;
+      --s2:  #1e1e1e;
+      --s3:  #252525;
+
+      /* Text */
+      --t1:  #efefef;
+      --t2:  #aaaaaa;
+      --t3:  #666666;
+
+      /* Borders */
+      --b0:  rgba(255,255,255,0.06);
+      --b1:  rgba(255,255,255,0.09);
+      --b2:  rgba(255,255,255,0.13);
+
+      /* Dashboard accent (orange) */
       --accent:       #D97757;
       --accent-hover: #e88a65;
-      --border:       rgba(255,255,255,0.09);
-      --border-light: rgba(255,255,255,0.06);
-      --shadow:       rgba(0,0,0,0.3);
-      --shadow-hover: rgba(0,0,0,0.5);
+
+      /* Shared semantic colours */
+      --ga:     linear-gradient(135deg,#4A8EF7 0%,#9B7DF7 100%);
+      --a1:     #4A8EF7;
+      --a2:     #9B7DF7;
+      --green:  #3DC87A; --green-d:  rgba(61,200,122,.13);
+      --amber:  #F0A928; --amber-d:  rgba(240,169,40,.13);
+      --red:    #E05555; --red-d:    rgba(224,85,85,.13);
+      --blue:   #4A8EF7; --blue-d:   rgba(74,142,247,.13);
+      --violet: #9B7DF7; --violet-d: rgba(155,125,247,.13);
+
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--t1);
       height: 100vh;
       padding: 20px 24px;
       line-height: 1.5;
@@ -44,7 +64,7 @@
       align-items: center;
       margin-bottom: 16px;
       padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--b1);
       flex-shrink: 0;
     }
 
@@ -58,7 +78,7 @@
       background-clip: text;
     }
 
-    h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); }
+    h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; color: var(--t2); }
 
     .header-left {
       display: flex;
@@ -69,7 +89,7 @@
     .view-toggle {
       display: flex;
       gap: 4px;
-      background: var(--bg-secondary);
+      background: var(--s1);
       padding: 4px;
       border-radius: 8px;
       margin-left: 16px;
@@ -80,27 +100,27 @@
       border: none;
       padding: 6px 14px;
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--t3);
       border-radius: 6px;
     }
 
     .view-toggle button:hover {
-      color: var(--text-primary);
+      color: var(--t1);
       background: transparent;
     }
 
     .view-toggle button.active {
-      background: var(--bg-card);
-      color: var(--text-primary);
+      background: var(--s2);
+      color: var(--t1);
       box-shadow: 0 1px 3px var(--shadow);
     }
 
     .buttons { display: flex; gap: 12px; }
 
     button {
-      background: var(--bg-card);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
+      background: var(--s2);
+      color: var(--t1);
+      border: 1px solid var(--b1);
       padding: 10px 18px;
       border-radius: 8px;
       cursor: pointer;
@@ -111,8 +131,8 @@
     }
 
     button:hover {
-      background: var(--bg-secondary);
-      border-color: var(--text-muted);
+      background: var(--s1);
+      border-color: var(--t3);
     }
 
     button.primary {
@@ -144,7 +164,7 @@
     }
 
     .column {
-      background: var(--bg-secondary);
+      background: var(--s1);
       border-radius: 12px;
       min-width: 340px;
       max-width: 340px;
@@ -160,7 +180,7 @@
       font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--text-secondary);
+      color: var(--t2);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -184,12 +204,12 @@
     }
 
     .column-header .count {
-      background: var(--bg-card);
+      background: var(--s2);
       padding: 3px 10px;
       border-radius: 12px;
       font-size: 12px;
       font-weight: 500;
-      color: var(--text-muted);
+      color: var(--t3);
     }
 
     .cards {
@@ -205,8 +225,8 @@
     }
 
     .task-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-light);
+      background: var(--s2);
+      border: 1px solid var(--b0);
       border-radius: 10px;
       padding: 14px 16px;
       margin-bottom: 10px;
@@ -218,7 +238,7 @@
 
     .task-card:hover {
       box-shadow: 0 4px 12px var(--shadow-hover);
-      border-color: var(--border);
+      border-color: var(--b1);
     }
 
     .task-card .add-on-hover {
@@ -236,7 +256,7 @@
       right: 8px;
       background: transparent;
       border: none;
-      color: var(--text-muted);
+      color: var(--t3);
       cursor: pointer;
       padding: 4px 6px;
       font-size: 14px;
@@ -249,7 +269,7 @@
     }
 
     .task-card .delete-btn:hover {
-      background: var(--bg-secondary);
+      background: var(--s1);
       color: var(--accent);
     }
 
@@ -262,12 +282,12 @@
       font-size: 14px;
       font-weight: 500;
       line-height: 1.5;
-      color: var(--text-primary);
+      color: var(--t1);
     }
 
     .card-note {
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--t3);
       margin-top: 6px;
       line-height: 1.4;
       overflow-wrap: break-word;
@@ -283,9 +303,9 @@
     .card-subtasks {
       margin-top: 10px;
       padding-top: 10px;
-      border-top: 1px solid var(--border-light);
+      border-top: 1px solid var(--b0);
       font-size: 13px;
-      color: var(--text-secondary);
+      color: var(--t2);
     }
 
     .subtask {
@@ -301,7 +321,7 @@
       min-width: 18px;
       min-height: 18px;
       flex-shrink: 0;
-      border: 2px solid var(--border);
+      border: 2px solid var(--b1);
       border-radius: 5px;
       display: inline-flex;
       align-items: center;
@@ -309,7 +329,7 @@
       vertical-align: middle;
       cursor: pointer;
       transition: all 0.15s ease;
-      background: var(--bg-card);
+      background: var(--s2);
     }
 
     .checkbox:hover {
@@ -334,7 +354,7 @@
     .empty-state {
       text-align: center;
       padding: 80px 40px;
-      color: var(--text-muted);
+      color: var(--t3);
     }
 
     .empty-state button {
@@ -354,8 +374,8 @@
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--text-primary);
-      color: var(--bg-primary);
+      background: var(--t1);
+      color: var(--bg);
       padding: 12px 24px;
       border-radius: 10px;
       font-size: 13px;
@@ -375,8 +395,8 @@
     .add-card button {
       width: 100%;
       background: transparent;
-      border: 2px dashed var(--border);
-      color: var(--text-muted);
+      border: 2px dashed var(--b1);
+      color: var(--t3);
       font-weight: 500;
     }
 
@@ -388,11 +408,11 @@
 
     .new-task-input {
       width: 100%;
-      background: var(--bg-card);
+      background: var(--s2);
       border: 2px solid var(--accent);
       border-radius: 8px;
       padding: 12px;
-      color: var(--text-primary);
+      color: var(--t1);
       font-size: 14px;
       font-family: inherit;
       resize: none;
@@ -403,7 +423,7 @@
     }
 
     .new-task-input::placeholder {
-      color: var(--text-muted);
+      color: var(--t3);
     }
 
     /* Scrollbar styling */
@@ -419,13 +439,13 @@
 
     .cards::-webkit-scrollbar-thumb,
     .list-view::-webkit-scrollbar-thumb {
-      background: var(--border);
+      background: var(--b1);
       border-radius: 3px;
     }
 
     .cards::-webkit-scrollbar-thumb:hover,
     .list-view::-webkit-scrollbar-thumb:hover {
-      background: var(--text-muted);
+      background: var(--t3);
     }
 
     /* List View Styles */
@@ -454,7 +474,7 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--text-secondary);
+      color: var(--t2);
       padding: 4px 0;
       margin-bottom: 6px;
       display: flex;
@@ -467,12 +487,12 @@
     }
 
     .list-section-header .section-title:hover {
-      color: var(--text-primary);
+      color: var(--t1);
     }
 
     .list-section-header .count {
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--t3);
       font-weight: 500;
     }
 
@@ -482,8 +502,8 @@
       gap: 12px;
       padding: 12px 14px;
       margin-bottom: 6px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-light);
+      background: var(--s2);
+      border: 1px solid var(--b0);
       cursor: grab;
       position: relative;
       border-radius: 10px;
@@ -497,12 +517,12 @@
 
     .list-item:hover {
       box-shadow: 0 4px 12px var(--shadow-hover);
-      border-color: var(--border);
+      border-color: var(--b1);
     }
 
     .list-item.dragging {
       opacity: 0.5;
-      background: var(--bg-secondary);
+      background: var(--s1);
     }
 
     .list-item .checkbox {
@@ -517,18 +537,18 @@
 
     .list-item-title {
       font-size: 15px;
-      color: var(--text-primary);
+      color: var(--t1);
       line-height: 1.4;
     }
 
     .list-item-title.checked {
-      color: var(--text-muted);
+      color: var(--t3);
       text-decoration: line-through;
     }
 
     .list-item-note {
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--t3);
       margin-top: 4px;
       cursor: pointer;
       line-height: 1.5;
@@ -543,7 +563,7 @@
     }
 
     .list-item-note:hover {
-      color: var(--text-secondary);
+      color: var(--t2);
     }
 
     .list-item-note.add-note {
@@ -566,7 +586,7 @@
       gap: 8px;
       padding: 3px 0;
       font-size: 13px;
-      color: var(--text-secondary);
+      color: var(--t2);
     }
 
     .list-item-subtask .checkbox {
@@ -582,12 +602,12 @@
     }
 
     .list-item-subtask span:hover {
-      color: var(--text-primary);
+      color: var(--t1);
     }
 
     .list-item-add-subtask {
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--t3);
       font-style: italic;
       cursor: pointer;
       padding: 3px 0;
@@ -605,8 +625,8 @@
 
     .list-item-section {
       font-size: 11px;
-      color: var(--text-muted);
-      background: var(--bg-secondary);
+      color: var(--t3);
+      background: var(--s1);
       padding: 2px 8px;
       border-radius: 4px;
       white-space: nowrap;
@@ -627,7 +647,7 @@
     .list-item-actions button {
       background: transparent;
       border: none;
-      color: var(--text-muted);
+      color: var(--t3);
       cursor: pointer;
       padding: 4px 6px;
       font-size: 14px;
@@ -636,7 +656,7 @@
     }
 
     .list-item-actions button:hover {
-      background: var(--bg-card);
+      background: var(--s2);
       color: var(--accent);
     }
 
@@ -650,11 +670,11 @@
     .list-add-section {
       margin-top: 16px;
       padding: 16px;
-      border: 2px dashed var(--border);
+      border: 2px dashed var(--b1);
       border-radius: 8px;
       text-align: center;
       cursor: pointer;
-      color: var(--text-muted);
+      color: var(--t3);
       font-size: 14px;
       font-weight: 500;
       transition: all 0.15s ease;
@@ -677,23 +697,23 @@
       background: transparent;
       border: none;
       font-size: 15px;
-      color: var(--text-primary);
+      color: var(--t1);
       font-family: inherit;
       outline: none;
     }
 
     .quick-add-input::placeholder {
-      color: var(--text-muted);
+      color: var(--t3);
     }
 
     .quick-add-section {
       font-size: 12px;
-      color: var(--text-muted);
-      background: var(--bg-secondary);
+      color: var(--t3);
+      background: var(--s1);
       padding: 4px 10px;
       border-radius: 6px;
       cursor: pointer;
-      border: 1px solid var(--border);
+      border: 1px solid var(--b1);
     }
 
     .quick-add-section:hover {
@@ -702,8 +722,8 @@
 
     .section-picker {
       position: absolute;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: var(--s2);
+      border: 1px solid var(--b1);
       border-radius: 8px;
       box-shadow: 0 4px 20px var(--shadow-hover);
       padding: 4px;
@@ -722,7 +742,7 @@
     }
 
     .section-picker button:hover {
-      background: var(--bg-secondary);
+      background: var(--s1);
     }
 
     /* ===== MEMORY STYLES ===== */
@@ -732,7 +752,7 @@
       gap: 4px;
       margin-bottom: 12px;
       flex-wrap: wrap;
-      background: var(--bg-secondary);
+      background: var(--s1);
       padding: 4px;
       border-radius: 8px;
       flex-shrink: 0;
@@ -740,7 +760,7 @@
 
     .memory-tab {
       background: transparent;
-      color: var(--text-muted);
+      color: var(--t3);
       padding: 8px 16px;
       border: none;
       border-radius: 6px;
@@ -751,25 +771,25 @@
       text-transform: capitalize;
     }
 
-    .memory-tab:hover { color: var(--text-primary); }
+    .memory-tab:hover { color: var(--t1); }
 
     .memory-tab.active {
-      color: var(--text-primary);
-      background: var(--bg-card);
+      color: var(--t1);
+      background: var(--s2);
       box-shadow: 0 1px 3px var(--shadow);
     }
 
     .memory-tab .count {
-      background: var(--bg-secondary);
+      background: var(--s1);
       padding: 2px 8px;
       border-radius: 10px;
       font-size: 11px;
       margin-left: 6px;
-      color: var(--text-muted);
+      color: var(--t3);
     }
 
     .memory-tab.active .count {
-      background: var(--border-light);
+      background: var(--b0);
     }
 
     .memory-grid {
@@ -788,8 +808,8 @@
       text-align: left;
       padding: 10px 16px;
       font-weight: 500;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border);
+      color: var(--t3);
+      border-bottom: 1px solid var(--b1);
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.03em;
@@ -797,13 +817,13 @@
 
     .memory-flat-table td {
       padding: 9px 16px;
-      border-bottom: 1px solid var(--border-light);
-      color: var(--text-primary);
+      border-bottom: 1px solid var(--b0);
+      color: var(--t1);
       line-height: 1.4;
     }
 
     .memory-flat-table td:first-child {
-      color: var(--text-muted);
+      color: var(--t3);
       font-weight: 500;
       white-space: nowrap;
       width: 120px;
@@ -814,12 +834,12 @@
     }
 
     .memory-flat-table tr:hover td {
-      background: var(--bg-secondary);
+      background: var(--s1);
     }
 
     .memory-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-light);
+      background: var(--s2);
+      border: 1px solid var(--b0);
       border-radius: 10px;
       padding: 16px;
       cursor: pointer;
@@ -839,18 +859,18 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: var(--text-primary);
+      color: var(--t1);
     }
 
     .memory-card-meta {
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--t3);
       margin-bottom: 8px;
     }
 
     .memory-card-preview {
       font-size: 13px;
-      color: var(--text-secondary);
+      color: var(--t2);
       line-height: 1.5;
       overflow: hidden;
       display: -webkit-box;
@@ -870,17 +890,17 @@
     }
 
     .memory-card-field-label {
-      color: var(--text-muted);
+      color: var(--t3);
       min-width: 80px;
     }
 
     .memory-card-field-value {
-      color: var(--text-secondary);
+      color: var(--t2);
     }
 
     .file-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-light);
+      background: var(--s2);
+      border: 1px solid var(--b0);
       border-radius: 10px;
       margin-bottom: 16px;
       box-shadow: 0 1px 3px var(--shadow);
@@ -888,7 +908,7 @@
 
     .file-card-header {
       padding: 16px;
-      border-bottom: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--b0);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -896,13 +916,13 @@
     }
 
     .file-card-header:hover {
-      background: var(--bg-secondary);
+      background: var(--s1);
     }
 
     .file-card-title {
       font-size: 14px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--t1);
     }
 
     .file-card-content {
@@ -913,7 +933,7 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       overflow-y: auto;
       display: none;
-      color: var(--text-secondary);
+      color: var(--t2);
     }
 
     .file-card-content.expanded {
@@ -928,8 +948,8 @@
     }
 
     .stat {
-      background: var(--bg-card);
-      border: 1px solid var(--border-light);
+      background: var(--s2);
+      border: 1px solid var(--b0);
       border-radius: 10px;
       padding: 16px 24px;
       min-width: 100px;
@@ -944,14 +964,14 @@
 
     .stat-label {
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--t3);
       text-transform: capitalize;
       margin-top: 4px;
     }
 
     .search-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: var(--s2);
+      border: 1px solid var(--b1);
       border-radius: 8px;
       padding: 10px 16px;
       display: flex;
@@ -964,20 +984,20 @@
       flex: 1;
       background: transparent;
       border: none;
-      color: var(--text-primary);
+      color: var(--t1);
       font-size: 14px;
       font-family: inherit;
       outline: none;
     }
 
     .search-box input::placeholder {
-      color: var(--text-muted);
+      color: var(--t3);
     }
 
     .add-btn {
       background: transparent;
-      border: 2px dashed var(--border);
-      color: var(--text-muted);
+      border: 2px dashed var(--b1);
+      color: var(--t3);
       padding: 40px;
       border-radius: 10px;
       cursor: pointer;
@@ -996,29 +1016,29 @@
 
     .markdown-content {
       line-height: 1.6;
-      color: var(--text-secondary);
+      color: var(--t2);
     }
 
-    .markdown-content h1 { font-size: 1.4em; margin: 16px 0 8px; color: var(--text-primary); }
-    .markdown-content h2 { font-size: 1.2em; margin: 14px 0 6px; color: var(--text-primary); }
-    .markdown-content h3 { font-size: 1.1em; margin: 12px 0 4px; color: var(--text-secondary); }
+    .markdown-content h1 { font-size: 1.4em; margin: 16px 0 8px; color: var(--t1); }
+    .markdown-content h2 { font-size: 1.2em; margin: 14px 0 6px; color: var(--t1); }
+    .markdown-content h3 { font-size: 1.1em; margin: 12px 0 4px; color: var(--t2); }
     .markdown-content p { margin: 8px 0; }
     .markdown-content ul, .markdown-content ol { margin: 8px 0 8px 20px; }
     .markdown-content li { margin: 4px 0; }
     .markdown-content code {
-      background: var(--bg-secondary);
+      background: var(--s1);
       padding: 2px 6px;
       border-radius: 4px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      color: var(--text-primary);
+      color: var(--t1);
     }
     .markdown-content pre {
-      background: var(--bg-secondary);
+      background: var(--s1);
       padding: 12px;
       border-radius: 8px;
       overflow-x: auto;
       margin: 8px 0;
-      border: 1px solid var(--border-light);
+      border: 1px solid var(--b0);
     }
     .markdown-content table {
       width: 100%;
@@ -1029,15 +1049,15 @@
     .markdown-content th, .markdown-content td {
       padding: 12px 16px;
       text-align: left;
-      border-bottom: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--b0);
     }
     .markdown-content th {
-      background: var(--bg-secondary);
+      background: var(--s1);
       font-weight: 600;
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--text-secondary);
+      color: var(--t2);
     }
 
     /* Modal */
@@ -1059,7 +1079,7 @@
     }
 
     .modal {
-      background: var(--bg-card);
+      background: var(--s2);
       border-radius: 12px;
       width: 90%;
       max-width: 800px;
@@ -1072,7 +1092,7 @@
 
     .modal-header {
       padding: 20px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--b1);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -1081,20 +1101,20 @@
     .modal-header h3 {
       font-size: 18px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--t1);
     }
 
     .modal-close {
       background: transparent;
       border: none;
-      color: var(--text-muted);
+      color: var(--t3);
       font-size: 24px;
       cursor: pointer;
       padding: 0;
       line-height: 1;
     }
 
-    .modal-close:hover { color: var(--text-primary); }
+    .modal-close:hover { color: var(--t1); }
 
     .modal-body {
       padding: 20px;
@@ -1104,7 +1124,7 @@
 
     .modal-footer {
       padding: 16px 20px;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--b1);
       display: flex;
       justify-content: flex-end;
       gap: 10px;
@@ -1118,7 +1138,7 @@
       display: block;
       font-size: 12px;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--t2);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 6px;
@@ -1126,11 +1146,11 @@
 
     .form-group textarea {
       width: 100%;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
+      background: var(--s1);
+      border: 1px solid var(--b1);
       border-radius: 8px;
       padding: 12px;
-      color: var(--text-primary);
+      color: var(--t1);
       font-size: 13px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       line-height: 1.5;
@@ -1171,12 +1191,12 @@
     }
 
     .memory-content-area::-webkit-scrollbar-thumb {
-      background: var(--border);
+      background: var(--b1);
       border-radius: 3px;
     }
 
     .memory-content-area::-webkit-scrollbar-thumb:hover {
-      background: var(--text-muted);
+      background: var(--t3);
     }
 
     .file-card-content::-webkit-scrollbar,
@@ -1191,27 +1211,27 @@
 
     .file-card-content::-webkit-scrollbar-thumb,
     .modal-body::-webkit-scrollbar-thumb {
-      background: var(--border);
+      background: var(--b1);
       border-radius: 3px;
     }
 
     .file-card-content::-webkit-scrollbar-thumb:hover,
     .modal-body::-webkit-scrollbar-thumb:hover {
-      background: var(--text-muted);
+      background: var(--t3);
     }
 
     /* File path display */
     .file-path {
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--t3);
       margin-top: 2px;
     }
 
     /* ===== GLOSSARY STYLES ===== */
     .glossary-filter {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      color: var(--t3);
       padding: 6px 14px;
       border-radius: 20px;
       font-size: 13px;
@@ -1220,9 +1240,9 @@
       transition: all 0.15s ease;
     }
     .glossary-filter:hover {
-      color: var(--text-primary);
-      border-color: var(--text-muted);
-      background: var(--bg-secondary);
+      color: var(--t1);
+      border-color: var(--t3);
+      background: var(--s1);
     }
     .glossary-filter.active {
       background: var(--accent);
@@ -1236,17 +1256,17 @@
 
     .back-btn-dash {
       width: 34px; height: 34px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: var(--s2);
+      border: 1px solid var(--b1);
       border-radius: 10px;
       display: inline-flex; align-items: center; justify-content: center;
-      text-decoration: none; color: var(--text-muted);
+      text-decoration: none; color: var(--t3);
       margin-right: 10px; flex-shrink: 0; transition: all 0.15s;
     }
-    .back-btn-dash:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
+    .back-btn-dash:hover { border-color: rgba(255,255,255,0.2); color: var(--t1); }
     .back-btn-dash svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-    .view-toggle button.active { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; color: var(--text-primary) !important; }
-    .memory-tab.active { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; color: var(--text-primary) !important; }
+    .view-toggle button.active { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; color: var(--t1) !important; }
+    .memory-tab.active { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; color: var(--t1) !important; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
@@ -1286,7 +1306,7 @@
     <div class="list-view" id="listView" style="display: none;"></div>
     <div class="board" id="board">
       <div class="empty-state" id="boardEmptyState" style="width: 100%;">
-        <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--text-primary);" id="boardEmptyMsg">Loading tasks…</p>
+        <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--t1);" id="boardEmptyMsg">Loading tasks…</p>
       </div>
     </div>
   </div>
@@ -1294,7 +1314,7 @@
   <!-- MEMORY TAB PANEL -->
   <div class="tab-panel" id="memoryPanel">
     <div id="memoryEmptyState" class="empty-state">
-      <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--text-primary);">Select your project folder</p>
+      <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--t1);">Select your project folder</p>
       <button id="openMemoryBtnLarge">Select Folder</button>
     </div>
     <div id="memoryMainContent" style="display: none; flex-direction: column; min-height: 0; flex: 1;">
@@ -1308,8 +1328,8 @@
   <!-- STATUS TAB PANEL -->
   <div class="tab-panel" id="statusPanel">
     <div id="statusEmptyState" class="empty-state">
-      <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--text-primary);">Open your CoWorkPilot folder</p>
-      <p style="margin-bottom: 24px; color: var(--text-muted); font-size: 14px;">Loads briefs, blockers, and open questions across all domains</p>
+      <p style="margin-bottom: 24px; font-size: 18px; font-weight: 600; color: var(--t1);">Open your CoWorkPilot folder</p>
+      <p style="margin-bottom: 24px; color: var(--t3); font-size: 14px;">Loads briefs, blockers, and open questions across all domains</p>
       <button id="openStatusBtnLarge">Open Folder</button>
     </div>
     <div id="statusMainContent" style="display: none; flex-direction: column; min-height: 0; flex: 1;">
@@ -1324,7 +1344,7 @@
   <div class="tab-panel" id="glossaryPanel">
     <div style="max-width: 800px; margin: 0 auto; flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px;">
       <div class="search-box" style="margin-bottom: 16px;">
-        <span style="color: var(--text-muted);">&#128269;</span>
+        <span style="color: var(--t3);">&#128269;</span>
         <input type="text" id="glossarySearch" placeholder="Search terms and meanings..." oninput="filterGlossary()">
       </div>
       <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;" id="glossaryFilters">
@@ -1570,11 +1590,11 @@
             <span data-action="edit-subtask" data-idx="${idx}" style="cursor: pointer;">${st.text}</span>
           </div>`;
         });
-        html += `<div class="subtask add-on-hover" data-action="add-subtask" style="color: var(--text-muted); cursor: pointer; font-style: italic; padding-left: 24px;">+ Add subtask</div>`;
+        html += `<div class="subtask add-on-hover" data-action="add-subtask" style="color: var(--t3); cursor: pointer; font-style: italic; padding-left: 24px;">+ Add subtask</div>`;
         html += '</div>';
       } else {
         html += `<div class="card-subtasks add-on-hover" style="margin-left: 30px;">
-          <div class="subtask" data-action="add-subtask" style="color: var(--text-muted); cursor: pointer; font-style: italic;">+ Add subtask</div>
+          <div class="subtask" data-action="add-subtask" style="color: var(--t3); cursor: pointer; font-style: italic;">+ Add subtask</div>
         </div>`;
       }
 
@@ -1621,7 +1641,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.value = task.title;
-      input.style.cssText = 'width: 100%; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 6px; padding: 6px 10px; color: var(--text-primary); font-size: 14px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: 100%; background: var(--s2); border: 2px solid var(--accent); border-radius: 6px; padding: 6px 10px; color: var(--t1); font-size: 14px; font-family: inherit; outline: none;';
 
       titleEl.replaceWith(input);
       input.focus();
@@ -1651,7 +1671,7 @@
       input.type = 'text';
       input.value = task.note || '';
       input.placeholder = 'Add a note...';
-      input.style.cssText = 'width: 100%; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 6px; padding: 4px 8px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: 100%; background: var(--s2); border: 2px solid var(--accent); border-radius: 6px; padding: 4px 8px; color: var(--t1); font-size: 13px; font-family: inherit; outline: none;';
 
       noteEl.replaceWith(input);
       input.focus();
@@ -1676,7 +1696,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.value = task.subtasks[idx].text;
-      input.style.cssText = 'width: calc(100% - 30px); background: var(--bg-card); border: 2px solid var(--accent); border-radius: 4px; padding: 2px 6px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: calc(100% - 30px); background: var(--s2); border: 2px solid var(--accent); border-radius: 4px; padding: 2px 6px; color: var(--t1); font-size: 13px; font-family: inherit; outline: none;';
 
       subtaskEl.replaceWith(input);
       input.focus();
@@ -1704,7 +1724,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = 'New subtask...';
-      input.style.cssText = 'width: calc(100% - 10px); background: var(--bg-card); border: 2px solid var(--accent); border-radius: 4px; padding: 2px 6px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: calc(100% - 10px); background: var(--s2); border: 2px solid var(--accent); border-radius: 4px; padding: 2px 6px; color: var(--t1); font-size: 13px; font-family: inherit; outline: none;';
 
       el.replaceWith(input);
       input.focus();
@@ -1732,7 +1752,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.value = section.name;
-      input.style.cssText = 'width: 180px; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 6px; padding: 4px 10px; color: var(--text-primary); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: 180px; background: var(--s2); border: 2px solid var(--accent); border-radius: 6px; padding: 4px 10px; color: var(--t1); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-family: inherit; outline: none;';
 
       titleEl.replaceWith(input);
       input.focus();
@@ -2080,8 +2100,8 @@
 
       const addSectionBtn = document.createElement('div');
       addSectionBtn.className = 'column';
-      addSectionBtn.style.cssText = 'background: transparent; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; min-height: 120px;';
-      addSectionBtn.innerHTML = '<span style="color: var(--text-muted); font-size: 14px; font-weight: 500;">+ Add Section</span>';
+      addSectionBtn.style.cssText = 'background: transparent; border: 2px dashed var(--b1); display: flex; align-items: center; justify-content: center; cursor: pointer; min-height: 120px;';
+      addSectionBtn.innerHTML = '<span style="color: var(--t3); font-size: 14px; font-weight: 500;">+ Add Section</span>';
       addSectionBtn.addEventListener('click', () => startAddingSection(addSectionBtn));
       board.appendChild(addSectionBtn);
     }
@@ -2096,7 +2116,7 @@
       // Quick add at top
       const quickAdd = document.createElement('div');
       quickAdd.className = 'quick-add';
-      quickAdd.style.cssText = 'border-bottom: 2px solid var(--border); margin-bottom: 24px; padding-bottom: 16px;';
+      quickAdd.style.cssText = 'border-bottom: 2px solid var(--b1); margin-bottom: 24px; padding-bottom: 16px;';
 
       const sectionName = sections.find(s => s.id === quickAddSection)?.name || 'Select section';
       quickAdd.innerHTML = `
@@ -2223,7 +2243,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.value = section.name;
-      input.style.cssText = 'width: 200px; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 6px; padding: 4px 10px; color: var(--text-primary); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: 200px; background: var(--s2); border: 2px solid var(--accent); border-radius: 6px; padding: 4px 10px; color: var(--t1); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-family: inherit; outline: none;';
 
       titleEl.replaceWith(input);
       input.focus();
@@ -2260,7 +2280,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = 'Section name...';
-      input.style.cssText = 'width: 100%; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 8px; padding: 12px 16px; color: var(--text-primary); font-size: 14px; font-family: inherit; outline: none; text-align: left;';
+      input.style.cssText = 'width: 100%; background: var(--s2); border: 2px solid var(--accent); border-radius: 8px; padding: 12px 16px; color: var(--t1); font-size: 14px; font-family: inherit; outline: none; text-align: left;';
 
       btn.innerHTML = '';
       btn.style.border = '2px solid var(--accent)';
@@ -2390,7 +2410,7 @@
           stText.textContent = st.text;
           if (st.checked) {
             stText.style.textDecoration = 'line-through';
-            stText.style.color = 'var(--text-muted)';
+            stText.style.color = 'var(--t3)';
           }
           stText.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -2434,7 +2454,7 @@
       input.type = 'text';
       input.value = task.note || '';
       input.placeholder = 'Add a note...';
-      input.style.cssText = 'width: 100%; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 6px; padding: 4px 8px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: 100%; background: var(--s2); border: 2px solid var(--accent); border-radius: 6px; padding: 4px 8px; color: var(--t1); font-size: 13px; font-family: inherit; outline: none;';
 
       noteEl.replaceWith(input);
       input.focus();
@@ -2459,7 +2479,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.value = task.subtasks[idx].text;
-      input.style.cssText = 'width: calc(100% - 30px); background: var(--bg-card); border: 2px solid var(--accent); border-radius: 4px; padding: 2px 6px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: calc(100% - 30px); background: var(--s2); border: 2px solid var(--accent); border-radius: 4px; padding: 2px 6px; color: var(--t1); font-size: 13px; font-family: inherit; outline: none;';
 
       subtaskEl.replaceWith(input);
       input.focus();
@@ -2487,7 +2507,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = 'New subtask...';
-      input.style.cssText = 'width: calc(100% - 10px); background: var(--bg-card); border: 2px solid var(--accent); border-radius: 4px; padding: 2px 6px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: calc(100% - 10px); background: var(--s2); border: 2px solid var(--accent); border-radius: 4px; padding: 2px 6px; color: var(--t1); font-size: 13px; font-family: inherit; outline: none;';
 
       el.replaceWith(input);
       input.focus();
@@ -2516,7 +2536,7 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.value = task.title;
-      input.style.cssText = 'width: 100%; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 6px; padding: 8px 12px; color: var(--text-primary); font-size: 15px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: 100%; background: var(--s2); border: 2px solid var(--accent); border-radius: 6px; padding: 8px 12px; color: var(--t1); font-size: 15px; font-family: inherit; outline: none;';
 
       titleEl.replaceWith(input);
       input.focus();
@@ -2595,10 +2615,10 @@
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = 'Section name...';
-      input.style.cssText = 'width: 220px; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 8px; padding: 10px 14px; color: var(--text-primary); font-size: 14px; font-family: inherit; outline: none;';
+      input.style.cssText = 'width: 220px; background: var(--s2); border: 2px solid var(--accent); border-radius: 8px; padding: 10px 14px; color: var(--t1); font-size: 14px; font-family: inherit; outline: none;';
 
       btn.innerHTML = '';
-      btn.style.cssText = 'background: var(--bg-secondary); border: 2px dashed var(--accent); display: flex; align-items: center; justify-content: center; cursor: default; min-height: 120px; min-width: 340px; border-radius: 12px;';
+      btn.style.cssText = 'background: var(--s1); border: 2px dashed var(--accent); display: flex; align-items: center; justify-content: center; cursor: default; min-height: 120px; min-width: 340px; border-radius: 12px;';
       btn.appendChild(input);
       input.focus();
 
@@ -2884,7 +2904,7 @@
         <div class="file-card">
           <div class="file-card-header" onclick="this.nextElementSibling.classList.toggle('expanded'); this.querySelector('.toggle').textContent = this.nextElementSibling.classList.contains('expanded') ? '\u2212' : '+'">
             <span class="file-card-title">CLAUDE.md</span>
-            <span class="toggle" style="color: var(--text-muted);">&minus;</span>
+            <span class="toggle" style="color: var(--t3);">&minus;</span>
           </div>
           <div class="file-card-content expanded markdown-content">${claudeContent}</div>
         </div>
@@ -2921,7 +2941,7 @@
       // All other directories use card grid view
       let html = `
         <div class="search-box">
-          <span style="color: var(--text-muted);">&#128269;</span>
+          <span style="color: var(--t3);">&#128269;</span>
           <input type="text" placeholder="Search ${dirName}..." id="dirSearch" oninput="filterMemoryDirectory('${dirName}', this.value)">
         </div>
         <div class="memory-grid" id="dirGrid">
@@ -2976,7 +2996,7 @@
     function renderMemoryDirectoryFlat(dirName, files) {
       let html = `
         <div class="search-box">
-          <span style="color: var(--text-muted);">&#128269;</span>
+          <span style="color: var(--t3);">&#128269;</span>
           <input type="text" placeholder="Search ${dirName}..." id="dirSearch" oninput="filterMemoryDirectory('${dirName}', this.value)">
         </div>
         <div id="dirGrid">
@@ -3123,7 +3143,7 @@
       document.getElementById('modalBody').innerHTML = `
         <div class="form-group">
           <label>Filename (without .md)</label>
-          <input type="text" id="newFileName" placeholder="my-new-entry" style="width: 100%; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); font-size: 14px; font-family: inherit; margin-bottom: 16px;">
+          <input type="text" id="newFileName" placeholder="my-new-entry" style="width: 100%; background: var(--s1); border: 1px solid var(--b1); border-radius: 8px; padding: 10px 12px; color: var(--t1); font-size: 14px; font-family: inherit; margin-bottom: 16px;">
         </div>
         <div class="form-group">
           <label>Content</label>
@@ -3395,7 +3415,7 @@
       // Domain cards
       const domainsEl = document.getElementById('statusDomains');
       if (domains.length === 0) {
-        domainsEl.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">No domains found in axpo/. Run /hedging-brief or /portal-brief to generate a brief.</p>';
+        domainsEl.innerHTML = '<p style="color: var(--t3); font-size: 14px;">No domains found in axpo/. Run /hedging-brief or /portal-brief to generate a brief.</p>';
       } else {
         domainsEl.innerHTML = domains.map((d, i) => renderDomainCard(d, i)).join('');
       }
@@ -3415,47 +3435,47 @@
         ? domain.blockers.map(b => `
             <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px;">
               <span style="color: #e5534b; font-size: 13px; flex-shrink: 0; margin-top: 1px;">●</span>
-              <span style="font-size: 13px; color: var(--text-secondary);">${escapeHtml(b.blocker || b.description || JSON.stringify(b))}</span>
+              <span style="font-size: 13px; color: var(--t2);">${escapeHtml(b.blocker || b.description || JSON.stringify(b))}</span>
             </div>`).join('')
-        : '<p style="font-size: 13px; color: var(--text-muted);">No blockers logged.</p>';
+        : '<p style="font-size: 13px; color: var(--t3);">No blockers logged.</p>';
 
       const questionsHtml = domain.questions.length > 0
         ? domain.questions.map(q => `
             <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px;">
               <span style="color: var(--accent); font-size: 13px; flex-shrink: 0; margin-top: 1px;">${q.id || '?'}</span>
               <div>
-                <div style="font-size: 13px; color: var(--text-secondary);">${escapeHtml(q.question || JSON.stringify(q))}</div>
+                <div style="font-size: 13px; color: var(--t2);">${escapeHtml(q.question || JSON.stringify(q))}</div>
                 ${q.blocker ? '<span style="font-size: 11px; color: #e5534b; font-weight: 600;">BLOCKER</span>' : ''}
               </div>
             </div>`).join('')
-        : '<p style="font-size: 13px; color: var(--text-muted);">No open questions logged.</p>';
+        : '<p style="font-size: 13px; color: var(--t3);">No open questions logged.</p>';
 
       const briefSection = domain.brief
         ? `<div class="file-card" style="margin-top: 16px;">
             <div class="file-card-header" onclick="toggleStatusBrief(${idx})">
               <div class="file-card-title">📄 Latest Brief — ${briefDate}</div>
-              <span id="statusBriefChevron${idx}" style="color: var(--text-muted); font-size: 13px;">▼ Expand</span>
+              <span id="statusBriefChevron${idx}" style="color: var(--t3); font-size: 13px;">▼ Expand</span>
             </div>
             <div id="statusBriefContent${idx}" class="file-card-content">
               <div class="markdown-content">${renderMarkdownToHtml(domain.brief.content)}</div>
             </div>
           </div>`
-        : `<div style="margin-top: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; font-size: 13px; color: var(--text-muted);">No brief generated yet. Run ${domain.name === 'customer-portal' ? '/portal-brief' : '/hedging-brief'} to create one.</div>`;
+        : `<div style="margin-top: 16px; padding: 16px; background: var(--s1); border-radius: 8px; font-size: 13px; color: var(--t3);">No brief generated yet. Run ${domain.name === 'customer-portal' ? '/portal-brief' : '/hedging-brief'} to create one.</div>`;
 
       return `
-        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px var(--shadow);">
+        <div style="background: var(--s2); border: 1px solid var(--b0); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px var(--shadow);">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-            <h2 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0;">${label}</h2>
-            ${briefDate ? `<span style="font-size: 12px; color: var(--text-muted); background: var(--bg-secondary); padding: 3px 10px; border-radius: 12px;">Updated ${briefDate}</span>` : ''}
+            <h2 style="font-size: 16px; font-weight: 600; color: var(--t1); margin: 0;">${label}</h2>
+            ${briefDate ? `<span style="font-size: 12px; color: var(--t3); background: var(--s1); padding: 3px 10px; border-radius: 12px;">Updated ${briefDate}</span>` : ''}
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div>
-              <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 10px;">Blockers</div>
+              <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--t3); margin-bottom: 10px;">Blockers</div>
               ${blockersHtml}
             </div>
             <div>
-              <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 10px;">Open Questions</div>
+              <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--t3); margin-bottom: 10px;">Open Questions</div>
               ${questionsHtml}
             </div>
           </div>
@@ -3536,23 +3556,23 @@
         const items = grouped[cat];
         if (!items || items.length === 0) continue;
         if (glossaryActiveFilter === 'All') {
-          html += `<div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 10px; padding: 0 2px;">${escapeHtml(cat)}</div>`;
+          html += `<div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--t3); margin-bottom: 10px; padding: 0 2px;">${escapeHtml(cat)}</div>`;
         }
-        html += `<div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px var(--shadow); margin-bottom: 24px;">
+        html += `<div style="background: var(--s2); border: 1px solid var(--b0); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px var(--shadow); margin-bottom: 24px;">
           <table class="memory-flat-table">
             <thead><tr><th style="width: 180px;">Term</th><th>Meaning</th></tr></thead>
             <tbody>`;
         items.forEach(item => {
           html += `<tr>
             <td style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap;">${escapeHtml(item.term)}</td>
-            <td style="color: var(--text-secondary);">${escapeHtml(item.meaning)}</td>
+            <td style="color: var(--t2);">${escapeHtml(item.meaning)}</td>
           </tr>`;
         });
         html += `</tbody></table></div>`;
       }
 
       if (!html) {
-        html = `<p style="color: var(--text-muted); font-size: 14px; text-align: center; padding: 60px 0;">No terms match "${escapeHtml(search)}"</p>`;
+        html = `<p style="color: var(--t3); font-size: 14px; text-align: center; padding: 60px 0;">No terms match "${escapeHtml(search)}"</p>`;
       }
 
       document.getElementById('glossaryTable').innerHTML = html;
