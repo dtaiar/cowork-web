@@ -512,6 +512,29 @@
     .cap-actions { display: flex; gap: 7px; margin-top: 10px; }
     .cap-actions .btn { padding: 7px 13px; font-size: 12px; border-radius: 8px; flex: 1; }
 
+    .cap-enrichment {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: rgba(155,125,247,.07);
+      border-left: 2px solid var(--violet);
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--t2);
+    }
+
+    .enrich-pending {
+      font-size: 11px;
+      color: var(--violet);
+      opacity: 0.5;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50%       { opacity: 0.8; }
+    }
+
     /* ═══════════════════════════════════════
        SUB TABS (Intel)
     ═══════════════════════════════════════ */
@@ -824,8 +847,10 @@ function renderCapture() {
         <span class="badge b-${c.project}">${PROJ[c.project] || c.project}</span>
         <span style="font-size:13px">${TICON[c.type] || '📝'}</span>
         <span class="ts">${fmtRel(c.created_at)}</span>
+        ${!c.enriched ? '<span class="enrich-pending" title="Enriching…">✦</span>' : ''}
       </div>
       <div class="body-t">${esc(c.content)}</div>
+      ${c.enrichment ? `<div class="cap-enrichment">${esc(c.enrichment)}</div>` : ''}
       <div class="cap-actions">
         <button class="btn btn-danger" onclick="delCap('${c.id}')">Delete</button>
       </div>
