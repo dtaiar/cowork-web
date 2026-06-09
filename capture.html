@@ -170,7 +170,8 @@
       left: 50%; transform: translateX(-50%);
       width: 100%; max-width: 430px;
       z-index: 100;
-      padding: 8px 16px calc(var(--safe-b) + 10px);
+      padding: 8px 16px max(calc(var(--safe-b) + 12px), 28px);
+      background: var(--bg);
     }
 
     .nav-bar {
