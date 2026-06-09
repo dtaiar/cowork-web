@@ -138,6 +138,12 @@ const Intel = {
   async remove(id) {
     const { error } = await sb.from('intel').delete().eq('id', id)
     if (error) console.error('Intel.remove:', error)
+  },
+
+  subscribe(callback) {
+    return sb.channel('intel-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'intel' }, callback)
+      .subscribe()
   }
 }
 
@@ -172,6 +178,12 @@ const LI = {
   async remove(id) {
     const { error } = await sb.from('linkedin_posts').delete().eq('id', id)
     if (error) console.error('LI.remove:', error)
+  },
+
+  subscribe(callback) {
+    return sb.channel('li-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'linkedin_posts' }, callback)
+      .subscribe()
   }
 }
 

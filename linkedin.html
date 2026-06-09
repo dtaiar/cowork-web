@@ -805,6 +805,12 @@ async function init() {
   await requireAuth();
   state.posts = await LI.list();
   render();
+
+  // Real-time: refresh when Telegram agent adds a draft
+  LI.subscribe(async () => {
+    state.posts = await LI.list();
+    render();
+  });
 }
 
 init();

@@ -476,6 +476,11 @@
     .task-body { flex: 1; min-width: 0; }
     .task-title { font-size: 14px; line-height: 1.4; font-weight: 500; color: var(--t1); }
     .task-note  { font-size: 12px; color: var(--t2); margin-top: 4px; line-height: 1.4; }
+    .task-notes {
+      font-size: 12px; color: var(--t2); margin-top: 5px; line-height: 1.5;
+      white-space: pre-wrap; border-left: 2px solid rgba(155,125,247,.3);
+      padding-left: 8px;
+    }
 
     .task-foot {
       display: flex; align-items: center;
@@ -854,9 +859,11 @@ function renderTasks() {
       <div class="task-check ${t.done?'checked':''}" onclick="toggleTask('${t.id}')"></div>
       <div class="task-body">
         <div class="task-title">${esc(t.title)}</div>
+        ${t.notes ? `<div class="task-notes">${esc(t.notes)}</div>` : ''}
         <div class="task-foot">
           <span class="badge b-${t.project}">${PROJ[t.project] || t.project || ''}</span>
           ${t.priority ? `<span class="pri-tag">PRIORITY</span>` : ''}
+          ${t.notes ? `<span class="pri-tag" style="background:rgba(155,125,247,.15);color:#9B7DF7;">✦ enriched</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -1043,18 +1050,27 @@ function renderLinkedin() {
       <button class="btn btn-primary" onclick="liSaveIdea()">Save idea</button>
     </div>`;
 
+  const STATUS_STYLE = {
+    idea:     { bg:'rgba(255,255,255,0.06)', color:'var(--t2)',    label:'idea' },
+    drafting: { bg:'rgba(155,125,247,.15)',  color:'#9B7DF7',      label:'✦ drafting' },
+    ready:    { bg:'rgba(61,200,122,.15)',   color:'#3DC87A',      label:'ready' },
+    posted:   { bg:'rgba(255,255,255,0.04)', color:'var(--t3)',    label:'posted' },
+  };
+
   const postRow = p => {
     const pillar = LI_PILLARS.find(x => x.id === p.topic) || LI_PILLARS[0];
+    const st = STATUS_STYLE[p.status] || STATUS_STYLE.idea;
+    const preview = p.hook || p.content || 'Untitled';
     return `
-      <div style="background:var(--s1);border:1px solid rgba(255,255,255,0.06);border-radius:10px;
+      <div style="background:var(--s1);border:1px solid ${p.status==='drafting'?'rgba(155,125,247,.2)':'rgba(255,255,255,0.06)'};border-radius:10px;
                   padding:10px 12px 10px 14px;display:flex;align-items:center;gap:10px;
                   position:relative;overflow:hidden;margin-bottom:8px;">
         <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${pillar.color};border-radius:3px 0 0 3px;"></div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.hook||p.content||'Untitled')}</div>
+          <div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(preview)}</div>
           <div style="display:flex;gap:6px;margin-top:3px;align-items:center;">
             <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:500;background:${pillar.color}22;color:${pillar.color};">${pillar.label.split('&')[0].trim()}</span>
-            <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:rgba(255,255,255,0.06);color:var(--t2);">${p.status}</span>
+            <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:500;background:${st.bg};color:${st.color};">${st.label}</span>
             <span class="ts">${fmtRel(p.created_at)}</span>
           </div>
         </div>
@@ -1213,6 +1229,22 @@ async function init() {
   Tasks.subscribe(async () => {
     state.tasks = await Tasks.list();
     if (tab === 'tasks') render();
+  });
+
+  // Real-time: refresh intel when Telegram agent adds blockers/questions
+  Intel.subscribe(async () => {
+    const intel = await Intel.list();
+    state.blockers  = intel.filter(i => i.type === 'blocker');
+    state.questions = intel.filter(i => i.type === 'question');
+    state.decisions = intel.filter(i => i.type === 'decision');
+    state.actions   = intel.filter(i => i.type === 'action');
+    if (tab === 'intel') render();
+  });
+
+  // Real-time: refresh LinkedIn posts when Telegram agent saves a draft
+  LI.subscribe(async () => {
+    state.liPosts = await LI.list();
+    if (tab === 'linkedin') render();
   });
 }
 

@@ -272,6 +272,12 @@
       line-height: 1.4;
       overflow-wrap: break-word;
       word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .task-card .card-note:not(.add-on-hover) {
+      border-left: 2px solid rgba(155,125,247,.25);
+      padding-left: 8px;
     }
 
     .card-subtasks {
@@ -525,6 +531,15 @@
       color: var(--text-muted);
       margin-top: 4px;
       cursor: pointer;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+
+    .list-item-note:not(.add-note) {
+      border-left: 2px solid rgba(155,125,247,.25);
+      padding-left: 8px;
+      margin-top: 6px;
     }
 
     .list-item-note:hover {
@@ -1523,11 +1538,21 @@
       card.draggable = true;
       card.dataset.id = task.id;
 
+      const projectLabel = task.project
+        ? `<span style="font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;background:rgba(74,142,247,.12);color:#4A8EF7;margin-left:4px;">${task.project === 'hedging-tool' ? 'HT' : task.project === 'customer-portal' ? 'Portal' : task.project}</span>`
+        : '';
+      const agentNote = task.note && task.note.length > 50
+        ? `<span style="font-size:10px;color:#9B7DF7;margin-left:4px;" title="Agent-enriched">✦</span>`
+        : '';
+
       let html = `
         <div style="display: flex; align-items: flex-start; gap: 12px;">
           <button class="delete-btn" data-action="delete" title="Delete task">&times;</button>
           <span class="checkbox ${task.checked ? 'checked' : ''}" data-action="toggle"></span>
-          <div class="card-title" data-action="edit-title">${task.title}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="card-title" data-action="edit-title">${task.title}</div>
+            <div style="display:flex;align-items:center;gap:2px;margin-top:3px;">${projectLabel}${agentNote}</div>
+          </div>
         </div>
       `;
 
@@ -1963,14 +1988,16 @@
               section: t.section,
               done: !!t.checked,
               priority: !!t.priority,
-              project: t.project || null
+              project: t.project || null,
+              notes: t.note || null
             });
           } else {
             const row = await Tasks.add({
               title: t.title,
               section: t.section || 'active',
               priority: !!t.priority,
-              project: t.project || null
+              project: t.project || null,
+              notes: t.note || null
             });
             if (row) {
               // Replace ephemeral ID with Supabase UUID
@@ -2022,7 +2049,7 @@
             id: row.id,
             _dbId: row.id,
             title: row.title,
-            note: '',
+            note: row.notes || '',
             checked: !!row.done,
             subtasks: [],
             section: sec,
@@ -2294,6 +2321,9 @@
       const content = document.createElement('div');
       content.className = 'list-item-content';
 
+      const titleRow = document.createElement('div');
+      titleRow.style.cssText = 'display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;';
+
       const title = document.createElement('div');
       title.className = `list-item-title ${task.checked ? 'checked' : ''}`;
       title.textContent = task.title;
@@ -2301,7 +2331,23 @@
         e.stopPropagation();
         startEditingListItem(title, task);
       });
-      content.appendChild(title);
+      titleRow.appendChild(title);
+
+      if (task.project) {
+        const badge = document.createElement('span');
+        badge.textContent = task.project === 'hedging-tool' ? 'HT' : task.project === 'customer-portal' ? 'Portal' : task.project;
+        badge.style.cssText = 'font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;background:rgba(74,142,247,.12);color:#4A8EF7;flex-shrink:0;';
+        titleRow.appendChild(badge);
+      }
+      if (task.note && task.note.length > 50) {
+        const dot = document.createElement('span');
+        dot.textContent = '✦';
+        dot.title = 'Agent-enriched';
+        dot.style.cssText = 'font-size:10px;color:#9B7DF7;flex-shrink:0;';
+        titleRow.appendChild(dot);
+      }
+
+      content.appendChild(titleRow);
 
       if (task.note) {
         const note = document.createElement('div');

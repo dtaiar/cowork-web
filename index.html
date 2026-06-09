@@ -411,6 +411,14 @@
   }
 
   loadStats();
+
+  // Re-run stats whenever any relevant table changes (Telegram agent writes, etc.)
+  ;['captures-hub','tasks-hub','intel-hub','li-hub'].forEach((ch, i) => {
+    const tables = ['captures','tasks','intel','linkedin_posts']
+    sb.channel(ch)
+      .on('postgres_changes', { event: '*', schema: 'public', table: tables[i] }, () => loadStats())
+      .subscribe()
+  })
 </script>
 </body>
 </html>
