@@ -50,7 +50,36 @@ const Captures = {
       .insert({ project, type, content, user_id: user.id })
       .select().single()
     if (error) { console.error('Captures.add:', error); return null }
+
+    // Fire-and-forget enrichment — real-time subscription will push the result
+    if (data?.id) {
+      sb.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.access_token) return
+        fetch(`${SUPABASE_URL}/functions/v1/enrich-capture`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ id: data.id }),
+        }).catch(e => console.warn('Enrich failed:', e))
+      })
+    }
+
     return data
+  },
+
+  async enrich(id) {
+    const { data: { session } } = await sb.auth.getSession()
+    if (!session?.access_token) return
+    return fetch(`${SUPABASE_URL}/functions/v1/enrich-capture`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ id }),
+    }).then(r => r.json()).catch(e => console.warn('Re-enrich failed:', e))
   },
 
   async remove(id) {

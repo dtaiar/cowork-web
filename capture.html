@@ -839,20 +839,52 @@ function renderCapture() {
     ).join('')}
   </div>`;
 
-  const capCard = c => `
-    <div class="cap-item">
+  const capCard = c => {
+    const isLink = c.type === 'link'
+    const pendingEnrich = !c.enriched
+    const displayContent = isLink
+      ? `<a href="${esc(c.content)}" target="_blank" rel="noopener"
+           style="font-size:13px;color:var(--violet);text-decoration:none;word-break:break-all;
+                  display:flex;align-items:center;gap:5px;">
+           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+             <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+           </svg>
+           ${esc(c.content)}
+         </a>`
+      : `<div class="body-t">${esc(c.content)}</div>`
+
+    const enrichHtml = c.enrichment
+      ? `<div class="cap-enrichment">${renderMd(c.enrichment)}</div>`
+      : pendingEnrich
+        ? `<div class="cap-enrichment" style="display:flex;align-items:center;gap:8px;">
+             <span class="enrich-pending">✦</span>
+             <span style="font-size:12px;color:var(--t3);">Enriching…</span>
+           </div>`
+        : ''
+
+    // Re-enrich button only when enriched=true but nothing came back
+    const reEnrichBtn = (c.enriched && !c.enrichment)
+      ? `<button class="btn btn-secondary" style="padding:7px 13px;font-size:12px;border-radius:8px;flex:none"
+           onclick="reEnrich('${c.id}')">⟳ Enrich</button>`
+      : ''
+
+    return `
+    <div class="cap-item" id="cap-${c.id}">
       <div class="meta">
         <span class="badge b-${c.project}">${PROJ[c.project] || c.project}</span>
         <span style="font-size:13px">${TICON[c.type] || '📝'}</span>
         <span class="ts">${fmtRel(c.created_at)}</span>
-        ${!c.enriched ? '<span class="enrich-pending" title="Enriching…">✦</span>' : ''}
       </div>
-      <div class="body-t">${esc(c.content)}</div>
-      ${c.enrichment ? `<div class="cap-enrichment">${esc(c.enrichment)}</div>` : ''}
+      ${displayContent}
+      ${enrichHtml}
       <div class="cap-actions">
+        ${reEnrichBtn}
         <button class="btn btn-danger" onclick="delCap('${c.id}')">Delete</button>
       </div>
-    </div>`;
+    </div>`
+  };
 
   if (!state.captures.length) return form;
 
@@ -1274,6 +1306,26 @@ function fmtDate(s) {
 function esc(s) {
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// Render lightweight markdown: **bold**, newlines → <br>, → and ⚠️ get accents
+function renderMd(text) {
+  if (!text) return '';
+  return esc(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--t1)">$1</strong>')
+    .replace(/\n/g, '<br>')
+    .replace(/(→)/g, '<span style="color:var(--violet)">$1</span>')
+    .replace(/(⚠️)/g, '<span style="color:var(--amber)">$1</span>');
+}
+
+async function reEnrich(id) {
+  // Optimistically show pending state
+  const cap = state.captures.find(c => c.id === id);
+  if (cap) { cap.enriched = false; cap.enrichment = null; render(); }
+  toast('Re-enriching…');
+  await Captures.enrich(id);
+  // Real-time subscription will push the result back
+}
+
 function empty(icon, msg) {
   return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-text">${msg}</div></div>`;
 }
@@ -1320,6 +1372,12 @@ async function init() {
 
   render();
   refreshHeader();
+
+  // Backfill any captures that landed without enrichment (e.g. from older saves)
+  const unenriched = state.captures.filter(c => !c.enriched);
+  if (unenriched.length) {
+    unenriched.forEach(c => Captures.enrich(c.id).catch(() => {}));
+  }
 
   // Real-time: refresh captures when any device adds/removes one
   Captures.subscribe(async () => {
